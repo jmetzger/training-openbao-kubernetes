@@ -53,6 +53,10 @@ log "=== Phase 1: System vorbereiten ==="
 useradd -m -s /bin/bash __TRAINING_USER__ 2>/dev/null || true
 echo "__TRAINING_USER__:${USER_PASSWORD}" | chpasswd
 
+# Sudoers-Eintrag: passwordless sudo für Training-User
+echo "${TRAINING_USER} ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/${TRAINING_USER}
+chmod 440 /etc/sudoers.d/${TRAINING_USER}
+
 # SSH Passwort-Auth aktivieren (Ubuntu 22.04 + 24.04 kompatibel)
 # BUG-001/BUG-004: Drop-in-Dateien mit PasswordAuthentication no überschreiben
 for conf_file in /etc/ssh/sshd_config.d/*.conf; do

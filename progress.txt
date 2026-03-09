@@ -62,6 +62,11 @@
   - docs/destroy-openbao-single.md: Usage-Guide mit allen Modi, Beispielausgaben, Troubleshooting
   - README.md: Link auf destroy-Guide unter "Server verwalten"
 
+- [x] Sudoers-Eintrag für Training-User implementiert (Phase 1 cloud-init.sh)
+  - `echo "${TRAINING_USER} ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/${TRAINING_USER}`
+  - Datei mit chmod 440 geschützt
+  - PRD.md: "noch nicht umgesetzt" Vermerk entfernt
+
 ## Ausstehend
 
 - [ ] BUG-006 im echten Deployment verifizieren (Agentic Loop mit CERTBOT_STAGING=1)
