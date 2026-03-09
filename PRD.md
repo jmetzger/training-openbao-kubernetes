@@ -591,6 +591,30 @@ Warten bis 2026-03-10 23:08 UTC, danach funktioniert Certbot wieder.
 - `install-openbao-single.sh` passt Tests 3+4 automatisch an (curl `-k` für Staging)
 - Für Produktivbetrieb: `CERTBOT_STAGING` weglassen oder auf `0` setzen
 
+### BUG-008: nginx Konfiguration ungültig – Phase 4 schlägt fehl
+
+**Status:** Offen
+
+**Symptom:**
+```
+[2026-03-09 18:05:54] === Phase 4: nginx HTTP-only ===
+[2026-03-09 18:05:54] FEHLER: nginx Konfiguration ungültig
+[FAILED]
+Droplet bleibt für manuelle Analyse erhalten (ID: 557049977, IP: 165.22.93.125)
+```
+
+**Mögliche Root Causes:**
+- Syntaxfehler in der generierten nginx-Config (z.B. fehlende Semikolons, falsche Variable)
+- Domain-Variable `$DOMAIN` nicht korrekt gesetzt oder leer zum Zeitpunkt der Config-Generierung
+- Sonderzeichen im Hostnamen verursachen ungültigen `server_name`-Eintrag
+
+**To-Do:**
+- Auf Droplet `165.22.93.125` einloggen und prüfen:
+  - `nginx -t` → genaue Fehlermeldung
+  - `cat /etc/nginx/sites-available/openbao` → erzeugte Config inspizieren
+  - `echo $DOMAIN` in cloud-init-Kontext prüfen
+- Fix in `cloud-init.sh` Phase 4: nach Config-Generierung `nginx -t` ausführen und bei Fehler vollständige Ausgabe ins Log schreiben
+
 ---
 
 ## Offene Punkte / Entscheidungen
