@@ -24,6 +24,11 @@
   - Polling: `dig @8.8.8.8 $DOMAIN +short` bis Droplet-IP zurückkommt (60x10s)
   - Zusätzlich: Retry-Schleife (3 Versuche, 30s Pause) aus BUG-002 in Code übernommen (war nur dokumentiert)
 
+- [x] BUG-004 behoben: SSH Passwort-Auth auf Ubuntu 24.04
+  - Root Cause 1: `systemctl restart sshd` schlägt auf Ubuntu 24.04 fehl → beide Namen probieren (`ssh` / `sshd`)
+  - Root Cause 2: `10-training.conf` anlegen reicht nicht – bestehende Drop-in-Dateien explizit per sed patchen
+  - Fix: Loop über alle `.conf` in sshd_config.d + Hauptkonfiguration wird ebenfalls gepatcht
+
 ## Ausstehend
 
 - [ ] Droplet nach Training-Tag löschen (Kosten sparen – manuell, nach Training)

@@ -51,12 +51,18 @@ log "=== Phase 1: System vorbereiten ==="
 useradd -m -s /bin/bash 11trainingdo 2>/dev/null || true
 echo "11trainingdo:${USER_PASSWORD}" | chpasswd
 
-# SSH Passwort-Auth aktivieren
-# Ubuntu 22.04: sshd_config.d/*.conf überschreibt die Hauptdatei (erster Treffer gewinnt).
-# 50-cloud-init.conf und 60-cloudimg-settings.conf setzen PasswordAuthentication no.
-# Fix: Datei mit niedrigerer Nummer erzeugt, die zuerst gelesen wird.
+# SSH Passwort-Auth aktivieren (Ubuntu 22.04 + 24.04 kompatibel)
+# BUG-001/BUG-004: Drop-in-Dateien mit PasswordAuthentication no überschreiben
+for conf_file in /etc/ssh/sshd_config.d/*.conf; do
+  [[ -f "$conf_file" ]] && \
+    sed -i 's/^PasswordAuthentication[[:space:]].*/PasswordAuthentication yes/' "$conf_file"
+done
+# Auch Hauptkonfiguration patchen (kommentierte und aktive Zeilen)
+sed -i 's/^#\?[[:space:]]*PasswordAuthentication[[:space:]].*/PasswordAuthentication yes/' /etc/ssh/sshd_config
+# Explizite Override-Datei (10 = niedrigste Nummer → zuerst gelesen)
 echo 'PasswordAuthentication yes' > /etc/ssh/sshd_config.d/10-training.conf
-systemctl restart sshd
+# Ubuntu 24.04: ssh.service; Ubuntu 22.04: sshd.service
+systemctl restart ssh 2>/dev/null || systemctl restart sshd
 
 # Pakete
 export DEBIAN_FRONTEND=noninteractive

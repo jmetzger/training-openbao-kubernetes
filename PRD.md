@@ -411,27 +411,35 @@ Zusätzlich wurde die Retry-Schleife aus BUG-002 (3 Versuche, 30s Pause) in den 
 
 ### BUG-004: SSH Passwort-Login schlägt weiterhin fehl – `Permission denied (publickey)` auf Ubuntu 24.04
 
-**Status:** Offen
+**Status:** ✓ Behoben (2026-03-09)
 
 **Symptom:**
 ```
-11training@openbao.jmetzger.do.t3isp.de: Permission denied (publickey).
+11trainingdo@openbao.jmetzger.do.t3isp.de: Permission denied (publickey).
 ```
 
 SSH bietet nur `publickey` als Auth-Methode an, obwohl `PasswordAuthentication yes` per `cloud-init.sh` gesetzt werden sollte.
 
-**Beobachtung:**
-Der Fix aus BUG-001 (Datei `/etc/ssh/sshd_config.d/10-training.conf` anlegen) funktionierte auf Ubuntu 22.04. Auf Ubuntu 24.04 (nach dem Image-Upgrade) tritt das Problem erneut auf – möglicherweise hat sich die Drop-in-Struktur oder die Verarbeitungsreihenfolge geändert.
+**Root Cause:**
+Zwei Probleme kombiniert auf Ubuntu 24.04:
+1. **Servicename:** Ubuntu 24.04 benennt den SSH-Daemon als `ssh.service` (nicht `sshd.service`). `systemctl restart sshd` schlägt stillschweigend fehl – ohne Alias greift der Restart nicht.
+2. **Nur neue Datei reicht nicht:** Der BUG-001-Fix (Datei `10-training.conf` anlegen) setzt einen neuen Wert, überschreibt aber nicht `PasswordAuthentication no` in bestehenden Drop-in-Dateien (`50-cloud-init.conf`). Bei OpenSSH gilt "erster Treffer gewinnt" – wenn `10-training.conf` alphabetisch vor `50-cloud-init.conf` eingelesen wird, sollte es funktionieren. Aber auf Ubuntu 24.04 können Cloud-Init-Module nach unserem Skript laufen und `50-cloud-init.conf` überschreiben.
 
-**Mögliche Root Causes:**
-- Ubuntu 24.04 liefert ggf. weitere oder anders benannte Drop-in-Dateien, die Vorrang vor `10-training.conf` haben
-- Der `systemctl restart sshd`-Aufruf in cloud-init greift möglicherweise zu früh (Race Condition mit cloud-init-Modulen)
-- Der Nutzername hat sich geändert: BUG-001 war `11trainingdo`, jetzt ist es `11training` – ggf. ist der User gar nicht angelegt
+**Fix in `cloud-init.sh` Phase 1:**
 
-**To-Do:**
-- Auf dem laufenden Server prüfen: `sshd -T | grep passwordauthentication` und `getent passwd 11training`
-- Alle Dateien in `/etc/ssh/sshd_config.d/` inspizieren und Verarbeitungsreihenfolge klären
-- `cloud-init.sh` Phase 4 (SSH-Konfiguration) auf Ubuntu 24.04 anpassen
+```bash
+# Alle bestehenden Drop-in-Dateien mit PasswordAuthentication no patchen
+for conf_file in /etc/ssh/sshd_config.d/*.conf; do
+  [[ -f "$conf_file" ]] && \
+    sed -i 's/^PasswordAuthentication[[:space:]].*/PasswordAuthentication yes/' "$conf_file"
+done
+# Auch Hauptkonfiguration patchen
+sed -i 's/^#\?[[:space:]]*PasswordAuthentication[[:space:]].*/PasswordAuthentication yes/' /etc/ssh/sshd_config
+# Explizite Override-Datei
+echo 'PasswordAuthentication yes' > /etc/ssh/sshd_config.d/10-training.conf
+# Ubuntu 24.04: ssh.service; Ubuntu 22.04: sshd.service
+systemctl restart ssh 2>/dev/null || systemctl restart sshd
+```
 
 ---
 
