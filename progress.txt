@@ -44,6 +44,15 @@
   - .env.example: CERTBOT_STAGING=1 dokumentiert (auskommentiert)
   - Ermöglicht Deployment-Tests ohne Let's Encrypt Rate Limit
 
+- [x] Feature: Multi-Server-Deployment implementiert
+  - cloud-init.sh: __TRAINING_USER__ Platzhalter (ersetzt 11trainingdo)
+  - install-openbao-single.sh: Dispatcher für `./install-openbao-single.sh <N>`
+    → Parallele Background-Jobs für tln1..tln<N>, je Log in /tmp/deploy-tln<N>.log
+    → Wartet auf alle Jobs, gibt Übersichtstabelle aus (✓/✗ pro Server)
+    → Exit-Code 0 wenn alle OK, 1 wenn mindestens einer fehlschlägt
+  - DEPLOY_USER + TRAINING_USER_OVERRIDE Env-Variablen für Sub-Instanzen
+  - Single-Server-Modus unverändert (rückwärtskompatibel)
+
 ## Ausstehend
 
 - [ ] BUG-006 im echten Deployment verifizieren (Agentic Loop mit CERTBOT_STAGING=1)

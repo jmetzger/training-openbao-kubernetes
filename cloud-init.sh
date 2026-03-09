@@ -12,6 +12,7 @@ DIGITALOCEAN_ACCESS_TOKEN="__DIGITALOCEAN_ACCESS_TOKEN__"
 USER_PASSWORD="__USER_PASSWORD__"
 DOMAIN="__DOMAIN__"
 CERTBOT_STAGING="__CERTBOT_STAGING__"
+TRAINING_USER="__TRAINING_USER__"
 
 # --- Konstanten ---
 BASE_DOMAIN="do.t3isp.de"
@@ -48,9 +49,9 @@ log "Phase 0 OK"
 # =============================================================
 log "=== Phase 1: System vorbereiten ==="
 
-# Nutzer anlegen
-useradd -m -s /bin/bash 11trainingdo 2>/dev/null || true
-echo "11trainingdo:${USER_PASSWORD}" | chpasswd
+# Nutzer anlegen (Platzhalter wird per sed durch install-openbao-single.sh ersetzt)
+useradd -m -s /bin/bash __TRAINING_USER__ 2>/dev/null || true
+echo "__TRAINING_USER__:${USER_PASSWORD}" | chpasswd
 
 # SSH Passwort-Auth aktivieren (Ubuntu 22.04 + 24.04 kompatibel)
 # BUG-001/BUG-004: Drop-in-Dateien mit PasswordAuthentication no überschreiben
