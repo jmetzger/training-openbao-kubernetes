@@ -443,25 +443,38 @@ systemctl restart ssh 2>/dev/null || systemctl restart sshd
 
 ### BUG-005: SSH Passwort-Login schlägt nach BUG-004-Fix weiterhin fehl
 
+**Status:** ✓ Behoben (2026-03-09)
+
+**Symptom:**
+```
+11trainingdo@openbao.jmetzger.do.t3isp.de: Permission denied (publickey).
+```
+
+**Ergebnis:** Login als `11trainingdo` funktioniert nach erneutem Deployment. BUG-004-Fix greift korrekt.
+
+### BUG-006: Certbot schlägt alle 3 Versuche fehl trotz DNS-Propagation bestätigt
+
 **Status:** Offen
 
 **Symptom:**
 ```
-11training@openbao.jmetzger.do.t3isp.de: Permission denied (publickey).
+[2026-03-09 15:19:58] DNS bereit: openbao.jmetzger.do.t3isp.de -> 64.226.110.119 (nach 1x10s)
+[2026-03-09 15:20:01] Certbot Versuch 1 fehlgeschlagen – warte 30s...
+[2026-03-09 15:20:32] Certbot Versuch 2 fehlgeschlagen – warte 30s...
+[2026-03-09 15:21:04] Certbot Versuch 3 fehlgeschlagen – warte 30s...
+[2026-03-09 15:21:34] FEHLER: Certbot nach 3 Versuchen fehlgeschlagen
 ```
 
-Der Fix aus BUG-004 (alle Drop-in-Dateien patchen + `systemctl restart ssh || sshd`) wurde implementiert, aber das Problem tritt auf einem neu deployte Droplet erneut auf.
-
-**Hinweis:**
-Der Nutzername im Fehler ist `11training`, nicht `11trainingdo` (wie in BUG-001/004). Möglicherweise wurde der Nutzername im Skript geändert, aber der User existiert auf dem Server gar nicht, oder `cloud-init` läuft nach dem SSH-Fix und überschreibt die Konfiguration wieder.
+**Beobachtung:**
+DNS-Propagation war bestätigt (`dig @8.8.8.8` gibt korrekte IP zurück), dennoch schlagen alle 3 Certbot-Versuche fehl. Das deutet darauf hin, dass das Problem nicht DNS-Propagation, sondern etwas anderes ist – z.B.:
+- nginx läuft zum Zeitpunkt des Certbot-Aufrufs noch nicht (Port 80 nicht erreichbar)
+- Let's Encrypt Multi-Perspective Validation schlägt von einem bestimmten Standort fehl (siehe BUG-002), und 30s Pause reicht nicht für einen anderen Validator-Satz
+- Certbot-Fehlermeldung nicht im Log sichtbar – genaue Fehlerursache unklar
 
 **To-Do:**
-- Auf dem laufenden Server prüfen:
-  - `getent passwd 11training` → existiert der User?
-  - `sshd -T | grep passwordauthentication` → ist Passwort-Auth aktiv?
-  - `cat /etc/ssh/sshd_config.d/*.conf` → welche Werte sind gesetzt?
-  - `cloud-init status --long` → lief cloud-init vollständig durch?
-- Ggf. muss der SSH-Restart ans **Ende** von cloud-init verschoben werden (Phase 8), damit cloud-init-Module nicht danach nochmals überschreiben
+- Certbot-Ausgabe vollständig ins Log schreiben (`certbot ... 2>&1 | tee -a /root/install-status.txt`)
+- Vor Certbot prüfen, ob nginx auf Port 80 antwortet (`curl -s http://$DOMAIN/`)
+- Anzahl Retry-Versuche erhöhen oder Pause verlängern
 
 ---
 
