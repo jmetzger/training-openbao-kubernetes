@@ -1,5 +1,10 @@
 # OpenBao on Kubernetes Training
 
+## Server verwalten
+
+  - **Server bereitstellen:** `./install-openbao-single.sh` oder `./install-openbao-single.sh <N>`
+  - **Server löschen:** [destroy-openbao-single.sh – Usage Guide](docs/destroy-openbao-single.md)
+
 ## Agenda
 
   1. OpenBao Grundlagen

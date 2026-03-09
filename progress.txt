@@ -53,8 +53,18 @@
   - DEPLOY_USER + TRAINING_USER_OVERRIDE Env-Variablen für Sub-Instanzen
   - Single-Server-Modus unverändert (rückwärtskompatibel)
 
+- [x] Feature: destroy-openbao-single.sh implementiert
+  - Unterstützt 3 Modi: Single (openbao-$USER), Anzahl (openbao-tln1..tln<N>), All (alle openbao-* Droplets)
+  - Bestätigungsdialog vor Löschen (zeigt Liste aller Ziele)
+  - Paralleles Löschen: Droplet + DNS-Record gleichzeitig per doctl
+  - Gesamtübersicht mit ✓/✗ pro Server
+  - Exit-Code 0 (alles OK oder nicht gefunden), 1 (API-Fehler)
+  - docs/destroy-openbao-single.md: Usage-Guide mit allen Modi, Beispielausgaben, Troubleshooting
+  - README.md: Link auf destroy-Guide unter "Server verwalten"
+
 ## Ausstehend
 
 - [ ] BUG-006 im echten Deployment verifizieren (Agentic Loop mit CERTBOT_STAGING=1)
 - [ ] Nach 2026-03-10 23:08 UTC: Produktivtest ohne Staging-Flag
 - [ ] Droplet nach Training-Tag löschen (Kosten sparen – manuell, nach Training)
+- [ ] destroy-openbao-single.sh automatisiert testen (PRD: 5 Destroy-Tests nach Multi-Server-Deployment)
