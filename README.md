@@ -11,8 +11,6 @@
      * [Secrets Engines](openbao/secrets-engines.md)
 
   2. OpenBao auf Kubernetes deployen
-     * [Voraussetzungen](openbao/kubernetes-prerequisites.md)
-     * [Installation mit Helm](openbao/install-helm.md)
      * [Konfiguration (HA + Raft)](openbao/config-ha-raft.md)
      * [Initialisierung und Unseal](openbao/init-unseal.md)
      * [Auto Unseal mit Transit](openbao/auto-unseal.md)
