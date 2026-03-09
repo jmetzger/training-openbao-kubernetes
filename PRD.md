@@ -381,6 +381,22 @@ done
 **Laufender Server (openbao.jmetzger.do.t3isp.de, 139.59.131.231):**
 Certbot wurde manuell erneut ausgeführt (erfolgreich). Phase 6 nginx-Config wurde manuell angewendet. Server läuft vollständig.
 
+### BUG-003: Certbot schlägt beim ersten Versuch fehl wegen DNS-Propagation
+
+**Status:** Offen
+
+**Symptom:**
+Certbot schlägt beim ersten Deployment-Versuch fehl, obwohl der Server korrekt läuft. Ein zweiter Versuch (einige Minuten später) gelingt.
+
+**Root Cause:**
+Let's Encrypt validiert Domains von mehreren geografischen Standorten aus. Kurz nach dem Erstellen des Droplets und dem Setzen des DNS-A-Records zeigen noch nicht alle Nameserver weltweit auf die neue IP – manche cachen noch die alte IP (oder NXDOMAIN). Je nachdem, welcher Let's Encrypt-Validator welchen Nameserver trifft, sieht er unterschiedliche IPs. Da alle Validatoren die gleiche IP sehen müssen, schlägt die Validierung fehl, sobald mindestens ein Validator einen veralteten Nameserver erwischt.
+
+**Workaround (aktuell):**
+Die bestehende Retry-Schleife aus BUG-002 (3 Versuche, 30s Pause) fängt viele Fälle ab, aber bei langsamer DNS-Propagation reicht das nicht immer.
+
+**To-Do:**
+Vor dem Certbot-Aufruf aktiv auf vollständige DNS-Propagation warten: Solange `dig @8.8.8.8 $DOMAIN +short` nicht die erwartete Droplet-IP zurückgibt, warten (Polling, max. 10 Minuten). Erst dann Certbot starten.
+
 ---
 
 ## Offene Punkte / Entscheidungen
