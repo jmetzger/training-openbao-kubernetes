@@ -4,14 +4,54 @@
 
 ## Ziel
 
-Self-service Deployment eines Servers auf DigitalOcean per einzigem Kommando:
+Self-service Deployment eines oder mehrerer Server auf DigitalOcean per einzigem Kommando:
 
 ```bash
-./install-openbao-single.sh
+./install-openbao-single.sh        # 1 Server für den eigenen $USER
+./install-openbao-single.sh 5      # 5 Trainings-Server: tln1 … tln5
 ```
 
-Nach erfolgreichem Durchlauf ist der Server erreichbar unter `https://openbao.<USER>.do.t3isp.de`
+Nach erfolgreichem Durchlauf ist jeder Server erreichbar unter `https://openbao.<USER>.do.t3isp.de`
 mit gültigem Let's Encrypt Zertifikat. **OpenBao wird in diesem Schritt nicht installiert** – das erfolgt im nächsten Schritt des Trainings.
+
+---
+
+## Feature: Multi-Server-Deployment (Trainings-Modus)
+
+### Aufruf
+
+```bash
+./install-openbao-single.sh <ANZAHL>
+```
+
+Wird eine Zahl übergeben, werden `<ANZAHL>` Server parallel deploytet. Die Nutzerkennung `$USER` wird dabei durch `tln<N>` ersetzt:
+
+| Aufruf | Deployete Server | Domains |
+|---|---|---|
+| `./install-openbao-single.sh` | 1 | `openbao.$USER.do.t3isp.de` |
+| `./install-openbao-single.sh 1` | 1 | `openbao.tln1.do.t3isp.de` |
+| `./install-openbao-single.sh 5` | 5 | `openbao.tln1.do.t3isp.de` … `openbao.tln5.do.t3isp.de` |
+
+### Verhalten
+
+- Jeder Server wird wie ein normales Single-Deployment behandelt: eigenes Droplet, eigener DNS-Record, eigenes TLS-Zertifikat
+- Deployments laufen **parallel** (Background-Jobs), um die Gesamtdauer gering zu halten
+- Jeder Job schreibt sein Log in eine separate Datei: `/tmp/deploy-tln<N>.log`
+- Das Script wartet auf alle Jobs und gibt am Ende eine Gesamtübersicht aus:
+  ```
+  tln1  ✓  https://openbao.tln1.do.t3isp.de
+  tln2  ✓  https://openbao.tln2.do.t3isp.de
+  tln3  ✗  FAILED – siehe /tmp/deploy-tln3.log
+  ```
+- Exit-Code: `0` wenn alle Server erfolgreich, `1` wenn mindestens einer fehlschlägt
+
+### .env im Multi-Server-Modus
+
+`USER_PASSWORD` gilt für alle `tln<N>`-User gleichermaßen. Der Trainings-User auf jedem Server heißt `tln<N>` statt `11trainingdo`.
+
+### Automatisierter Test (Claude)
+
+Claude führt nach dem Deployment für jeden Server den vollständigen Testplan (5 Tests) durch und wiederholt fehlerhafte Deployments automatisch bis zu 2 Mal, bevor es als endgültig fehlgeschlagen gilt.
 
 ---
 
