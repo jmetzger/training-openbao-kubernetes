@@ -4,14 +4,14 @@
 
 ## Ziel
 
-Self-service Deployment eines OpenBao Servers auf DigitalOcean per einzigem Kommando:
+Self-service Deployment eines Servers auf DigitalOcean per einzigem Kommando:
 
 ```bash
 ./install-openbao-single.sh
 ```
 
-Nach erfolgreichem Durchlauf ist OpenBao erreichbar unter `https://openbao.<USER>.do.t3isp.de`
-mit gültigem Let's Encrypt Zertifikat und vollständig initialisierten Unsealing.
+Nach erfolgreichem Durchlauf ist der Server erreichbar unter `https://openbao.<USER>.do.t3isp.de`
+mit gültigem Let's Encrypt Zertifikat. **OpenBao wird in diesem Schritt nicht installiert** – das erfolgt im nächsten Schritt des Trainings.
 
 ---
 
@@ -55,7 +55,7 @@ Datei `.env` im Projekt-Root (nicht ins Repo committen):
 
 ```bash
 DIGITALOCEAN_ACCESS_TOKEN=dop_v1_xxx   # DigitalOcean API Token
-USER_PASSWORD=sicheresPasswort          # OpenBao Root-Passwort / Init-Passwort
+USER_PASSWORD=sicheresPasswort          # Passwort für den Trainings-User
 ```
 
 Vorlage `.env.example` wird ins Repo eingecheckt:
@@ -86,31 +86,17 @@ USER_PASSWORD=ENTER_YOUR_PASSWORD
 ```
 Internet (443/80)
       │
-   nginx (SSL-Terminierung)
-      │  - Let's Encrypt Zertifikat via Certbot (webroot)
+   nginx (systemd-Service)
+      │  - Let's Encrypt Zertifikat via certbot (webroot)
       │  - HTTP → HTTPS Redirect
-      │  - Phase 1: HTTP-only (für Certbot Challenge)
-      │  - Phase 2: HTTPS mit proxy_pass → OpenBao
-      │
-      ▼
-OpenBao (127.0.0.1:8200)
-      │  - tls_disable = 1 (TLS macht nginx)
-      │  - Storage: File-Backend (/opt/openbao/data)
-      │  - Initialisierung: 1 Key Share, Threshold 1 (Single-Node)
-      │
-   Docker (docker-compose)
-      ├── openbao   – OpenBao Server
-      ├── nginx     – Reverse Proxy + SSL-Terminierung
-      └── certbot   – Let's Encrypt Renewal (alle 12h)
+      │  - HTTPS: statische Seite "Server bereit"
 ```
 
-### Warum nginx vor OpenBao?
+### Warum kein Docker?
 
-- Certbot webroot-Challenge läuft unabhängig von OpenBao
-- Automatische Zertifikatserneuerung funktioniert auch bei OpenBao-Restarts
-- HTTP → HTTPS Redirect sauber in nginx
-- OpenBao muss kein eigenes TLS verwalten (`tls_disable = 1`)
-- Konsistentes Pattern zu anderen Trainings-Deployments
+- Weniger Abstraktion → einfacher zu debuggen im Training
+- Direkter Zugriff auf Logs via `journalctl`
+- nginx und certbot laufen als native systemd-Services
 
 ---
 
@@ -126,85 +112,50 @@ Das Script läuft als `user-data` auf dem Droplet und schreibt seinen Fortschrit
 
 **Phase 1 – System vorbereiten**
 - Nutzer `11trainingdo` anlegen, SSH-Passwort-Authentifizierung aktivieren
-- Pakete installieren: `docker.io`, `docker-compose`, `curl`, `wget`, `dnsutils`, `ufw`
-- `doctl` installieren und API-Token validieren
+- Pakete installieren: `nginx`, `certbot`, `python3-certbot-nginx`, `curl`, `wget`, `dnsutils`, `ufw`
+- `doctl` installieren – Version **1.151.0** (Stand: 2026-03-09):
+  ```bash
+  DOCTL_VERSION="1.151.0"
+  curl -sL "https://github.com/digitalocean/doctl/releases/download/v${DOCTL_VERSION}/doctl-${DOCTL_VERSION}-linux-amd64.tar.gz" \
+    | tar -xz -C /usr/local/bin
+  ```
+- API-Token validieren (`doctl account get`)
 
 **Phase 2 – IP & DNS**
-- Droplet-IP via Metadata-API (`169.254.169.254`)
-- A-Record in `do.t3isp.de` erstellen oder aktualisieren (via doctl)
+- Droplet-IP via Metadata-API (`169.254.169.254`) ermitteln
+- A-Record `openbao.<USER>.do.t3isp.de` → Droplet-IP in `do.t3isp.de` erstellen oder aktualisieren (via `doctl compute domain records`)
 - DNS-Propagation abwarten: max. 5 Minuten, prüft Google DNS (`8.8.8.8`) und DigitalOcean Nameserver
 
 **Phase 3 – Firewall**
 - `ufw` Regeln: 22, 80, 443 freigeben
 - Regeln zuerst setzen, dann `ufw enable`
 
-**Phase 4 – Verzeichnisstruktur**
-```
-/opt/openbao/
-├── docker-compose.yml
-├── config/
-│   └── openbao.hcl
-├── data/          # OpenBao File-Storage
-├── nginx/
-│   ├── nginx.conf
-│   └── html/      # Custom Error Pages
-└── certbot/
-    ├── conf/      # Let's Encrypt Certs
-    └── www/       # ACME Challenge Webroot
-```
+**Phase 4 – nginx konfigurieren (HTTP-only)**
+- nginx-Konfiguration für `openbao.<USER>.do.t3isp.de`:
+  - `listen 80`
+  - ACME-Challenge-Location (`/.well-known/acme-challenge/`)
+  - Alle anderen Anfragen: `return 301 https://$host$request_uri`
+- nginx starten und aktivieren
 
-**Phase 5 – docker-compose.yml erstellen**
+**Phase 5 – Let's Encrypt Zertifikat**
+- Certbot via `certbot --nginx` für `openbao.<USER>.do.t3isp.de`
+- Zertifikat validieren: `/etc/letsencrypt/live/<DOMAIN>/fullchain.pem` muss existieren
+- Automatische Erneuerung via systemd-Timer (`certbot.timer` ist nach certbot-Installation aktiv)
 
-Services:
-- `openbao`: Image `openbao/openbao:latest`, Port `127.0.0.1:8200:8200`, IPC_LOCK Capability
-- `nginx`: Image `nginx:1.27-alpine`, Ports `80:80` und `443:443`
-- `certbot`: Image `certbot/certbot:v3.0.1`, Renewal alle 12h
-
-**Phase 6 – OpenBao Konfiguration (`openbao.hcl`)**
-
-```hcl
-storage "file" {
-  path = "/vault/data"
-}
-
-listener "tcp" {
-  address     = "0.0.0.0:8200"
-  tls_disable = 1
-}
-
-ui = true
-```
-
-**Phase 7 – nginx Phase 1 (HTTP-only)**
-- Konfiguration: nur `listen 80`, ACME-Challenge-Location, Proxy zu OpenBao
-- Container starten: `openbao` und `nginx`
-- Warten bis OpenBao bereit ist (Health-Check gegen `127.0.0.1:8200/v1/sys/health`)
-
-**Phase 8 – OpenBao initialisieren**
-- `docker exec openbao bao operator init -key-shares=1 -key-threshold=1`
-- Unseal Key und Root Token in `/root/openbao-credentials.txt` speichern (`chmod 600`)
-- Unseal: `docker exec openbao bao operator unseal <UNSEAL_KEY>`
-- Root Token im Container als Env-Variable für Health-Checks setzen
-
-**Phase 9 – Let's Encrypt Zertifikat**
-- Certbot via `docker run` (webroot-Methode) für `openbao.<USER>.do.t3isp.de`
-- Zertifikat validieren: `certbot/conf/live/<DOMAIN>/fullchain.pem` muss existieren
-
-**Phase 10 – nginx Phase 2 (HTTPS)**
-- nginx.conf mit HTTPS-Block ersetzen:
+**Phase 6 – nginx HTTPS-Konfiguration**
+- nginx.conf mit HTTPS-Block aktualisieren:
   - HTTP → HTTPS Redirect
   - SSL mit `fullchain.pem` / `privkey.pem`
   - TLSv1.2 + TLSv1.3
-  - `proxy_pass http://openbao:8200`
-- `docker-compose restart nginx`
-- Certbot Renewal-Container starten
+  - `location /` liefert statische HTML-Seite: "Server bereit – OpenBao folgt im nächsten Schritt"
+- `systemctl reload nginx`
 
-**Phase 11 – Finale Tests**
-- HTTPS erreichbar (`curl -s https://<DOMAIN>/v1/sys/health`)
-- OpenBao Status: `initialized=true`, `sealed=false`
-- Credentials-Datei ausgeben
+**Phase 7 – Finale Tests**
+- HTTPS erreichbar (`curl -s https://<DOMAIN>/` → HTTP 200)
+- SSL-Zertifikat gültig (`curl` ohne `-k` erfolgreich)
+- nginx aktiv (`systemctl is-active nginx`)
 
-**Phase 12 – Status `[DONE]`**
+**Phase 8 – Status `[DONE]`**
 - In `/root/install-status.txt` schreiben
 - Laufzeit ausgeben
 
@@ -212,7 +163,7 @@ ui = true
 
 ## Ablauf `install-openbao-single.sh` (lokal)
 
-Das Script kombiniert Deployment und Test in einem Durchlauf. Grundlage ist das Muster aus `deploy-test.sh` des Checkmk-Projekts.
+Das Script kombiniert Deployment und Test in einem Durchlauf.
 
 ```
 1. .env laden und validieren
@@ -233,7 +184,7 @@ Das Script kombiniert Deployment und Test in einem Durchlauf. Grundlage ist das 
 
 ### Wichtig: cloud-init muss vollständig sein
 
-`bao apply` bzw. das Droplet-Create gilt erst als erfolgreich, wenn `/root/install-status.txt` den Eintrag `[DONE]` enthält. Das Skript **pollt aktiv** und wartet – es geht nicht weiter bevor cloud-init abgeschlossen ist.
+Das Skript **pollt aktiv** und wartet – es geht nicht weiter bevor cloud-init `[DONE]` in `/root/install-status.txt` eingetragen hat.
 
 ---
 
@@ -245,50 +196,52 @@ Alle Tests werden nach cloud-init `[DONE]` ausgeführt:
 |---|---|---|
 | 1 | DNS Resolution | `openbao.<USER>.do.t3isp.de` → Droplet-IP |
 | 2 | HTTP → HTTPS Redirect | HTTP 301/302 |
-| 3 | HTTPS erreichbar | HTTP 200 |
+| 3 | HTTPS erreichbar | HTTP-Response (beliebiger Status-Code) |
 | 4 | SSL Zertifikat gültig | `curl` ohne `-k` erfolgreich |
-| 5 | OpenBao Health API | `GET /v1/sys/health` → `initialized=true, sealed=false` |
-| 6 | OpenBao UI erreichbar | `GET /ui/` → HTTP 200 |
-| 7 | Docker Container laufen | `openbao`, `nginx`, `certbot` alle `Up` |
+| 5 | nginx läuft | `systemctl is-active nginx` → `active` |
+
+OpenBao wird in diesem Schritt **nicht installiert** – das ist Inhalt des nächsten Trainingsschritts.
 
 Bei Fehler: Logs ausgeben, Droplet **bleibt bestehen** für manuelle Analyse.
 
 ---
 
-## Credentials-Ausgabe
+## Server-Info Ausgabe
 
 Nach erfolgreichem Deployment wird ausgegeben:
 
 ```
 ═══════════════════════════════════════════════════
-         OPENBAO INSTALLATION - CREDENTIALS
+         SERVER BEREIT FÜR OPENBAO TRAINING
 ═══════════════════════════════════════════════════
 
-🌐 URL:           https://openbao.<USER>.do.t3isp.de/ui/
-🖥️  Droplet IP:   <IP>
+URL:           https://openbao.<USER>.do.t3isp.de
+Droplet IP:    <IP>
+SSH:           ssh 11trainingdo@<IP>
+Passwort:      <USER_PASSWORD>
 
-🔑 ROOT TOKEN:    <root-token>
-🔓 UNSEAL KEY:    <unseal-key>
+STATUS:
+  nginx:       aktiv (systemd)
+  certbot:     automatische Erneuerung via systemd-Timer
+  OpenBao:     noch nicht installiert (folgt im naechsten Schritt)
 
-⚠️  Credentials gespeichert in: /root/openbao-credentials.txt (chmod 600)
+NAECHSTER SCHRITT:
+  OpenBao installieren und starten:
+  ssh 11trainingdo@<IP>
 
-🐳 DOCKER BEFEHLE:
-   Status:   cd /opt/openbao && docker-compose ps
-   Logs:     docker-compose logs -f openbao
-   Restart:  docker-compose restart
-   Unseal:   docker exec openbao bao operator unseal <UNSEAL_KEY>
-
-🔄 SSL ERNEUERUNG:
-   Automatisch alle 12h via Certbot Container
+HILFREICHE BEFEHLE:
+  nginx Logs:  journalctl -u nginx -f
+  nginx Test:  nginx -t
 
 ═══════════════════════════════════════════════════
 ```
 
 ---
 
-## Nicht im Scope (Single-Node)
+## Nicht im Scope (dieser Schritt)
 
-- HA-Cluster / Raft-Storage (separates Deployment)
+- OpenBao installieren, starten oder initialisieren (kommt später)
+- HA-Cluster / Raft-Storage
 - Kubernetes-Integration
 - Auto-Unseal (KMS)
 - LDAP / OIDC Auth
@@ -300,7 +253,7 @@ Nach erfolgreichem Deployment wird ausgegeben:
 
 ### Ziel
 
-Claude führt `install-openbao-single.sh` eigenständig aus und iteriert so lange, bis alle Tests bestehen. Kein manueller Eingriff nötig – Claude liest Fehlerausgaben, analysiert die Ursache, passt die Skripte an und startet neu.
+Claude führt `install-openbao-single.sh` eigenständig aus und iteriert so lange, bis alle Tests bestehen.
 
 ### Ablauf (Claude als Agent)
 
@@ -324,8 +277,7 @@ Claude führt `install-openbao-single.sh` eigenständig aus und iteriert so lang
 | **Max. Iterationen** | 5 – danach Abbruch und Fehlerbericht an Nutzer |
 | **Droplet vor Neustart löschen** | Claude löscht das alte Droplet bevor es ein neues erstellt |
 | **Kein blindes Retry** | Jede Iteration muss eine konkrete Änderung am Skript enthalten |
-| **Credentials sichern** | Nach erfolgreichem Run: Root Token und Unseal Key ausgeben |
-| **Kosten im Blick** | Fehlgeschlagene Droplets sofort löschen, nie länger als nötig laufen lassen |
+| **Kosten im Blick** | Fehlgeschlagene Droplets sofort löschen |
 
 ### Fehlerkategorien und Reaktion
 
@@ -333,23 +285,20 @@ Claude führt `install-openbao-single.sh` eigenständig aus und iteriert so lang
 |---|---|
 | DNS-Propagation Timeout | Wartezeit im Script erhöhen |
 | Certbot-Fehler (DNS noch nicht bereit) | Sleep vor Certbot-Aufruf verlängern |
-| OpenBao startet nicht | HCL-Konfiguration prüfen und korrigieren |
+| nginx startet nicht | Konfiguration prüfen (`nginx -t`) |
 | SSH-Verbindung schlägt fehl | SSH-Key-Pfad oder DO SSH-Key-ID prüfen |
-| docker-compose Fehler | Image-Namen oder Volume-Mounts korrigieren |
 | cloud-init bricht ab (`[FAILED]`) | Logs via SSH holen, Fehlerphase identifizieren |
 
 ### Abbruchkriterium (Erfolg)
 
-Claude gilt als fertig, wenn alle 7 Tests aus dem Testplan grün sind:
+Claude gilt als fertig, wenn alle 5 Tests aus dem Testplan grün sind:
 
 ```
 ✓ DNS Resolution
 ✓ HTTP → HTTPS Redirect
 ✓ HTTPS erreichbar
 ✓ SSL Zertifikat gültig
-✓ OpenBao Health API (initialized=true, sealed=false)
-✓ OpenBao UI erreichbar
-✓ Docker Container laufen (openbao, nginx, certbot)
+✓ nginx läuft
 ```
 
 ---
@@ -358,7 +307,4 @@ Claude gilt als fertig, wenn alle 7 Tests aus dem Testplan grün sind:
 
 | Punkt | Entscheidung |
 |---|---|
-| OpenBao Storage Backend | File-Backend (ausreichend für Single-Node Training) |
-| Key Shares beim Init | 1 Share, Threshold 1 (vereinfacht für Training) |
-| OpenBao Version | `latest` – oder fixe Version im `.env` pinnen? |
 | Droplet nach Tests löschen? | Interaktive Frage am Ende des Scripts |

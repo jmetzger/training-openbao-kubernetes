@@ -88,7 +88,12 @@ EXISTING_ID=$(doctl compute droplet list --format Name,ID --no-header \
 if [[ -n "$EXISTING_ID" ]]; then
   echo ""
   echo "Droplet '$HOSTNAME' (ID: $EXISTING_ID) existiert bereits."
-  read -rp "Neu erstellen (löschen + neu)? [y/N] " CONFIRM
+  if [[ "${AUTO_MODE:-0}" == "1" ]]; then
+    echo "AUTO_MODE: Lösche bestehendes Droplet automatisch..."
+    CONFIRM="y"
+  else
+    read -rp "Neu erstellen (löschen + neu)? [y/N] " CONFIRM
+  fi
   if [[ "${CONFIRM,,}" == "y" ]]; then
     echo "Lösche bestehendes Droplet..."
     doctl compute droplet delete "$EXISTING_ID" --force
@@ -295,11 +300,15 @@ fi
 # =============================================================
 # Interaktiv: Droplet löschen?
 # =============================================================
-echo ""
-read -rp "Droplet jetzt löschen? [y/N] " DELETE_CONFIRM
-if [[ "${DELETE_CONFIRM,,}" == "y" ]]; then
-  doctl compute droplet delete "$DROPLET_ID" --force
-  echo "Droplet gelöscht."
+if [[ "${AUTO_MODE:-0}" != "1" ]]; then
+  echo ""
+  read -rp "Droplet jetzt löschen? [y/N] " DELETE_CONFIRM
+  if [[ "${DELETE_CONFIRM,,}" == "y" ]]; then
+    doctl compute droplet delete "$DROPLET_ID" --force
+    echo "Droplet gelöscht."
+  fi
+else
+  echo "AUTO_MODE: Droplet bleibt bestehen (ID: $DROPLET_ID, IP: $DROPLET_IP)"
 fi
 
 echo ""
