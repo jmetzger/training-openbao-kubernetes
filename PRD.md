@@ -16,7 +16,7 @@ mit gültigem Let's Encrypt Zertifikat. **OpenBao wird in diesem Schritt nicht i
 
 ---
 
-## Feature: Destroy-Script (`destroy-openbao.sh`)
+## Feature: Destroy-Script (`destroy-openbao-single.sh`)
 
 ### Zweck
 
@@ -25,9 +25,9 @@ Löscht alle deployten Droplets und DNS-Records vollständig und automatisiert �
 ### Aufruf
 
 ```bash
-./destroy-openbao.sh           # löscht openbao-$USER + DNS-Record
-./destroy-openbao.sh 5         # löscht openbao-tln1 … openbao-tln5 + alle DNS-Records
-./destroy-openbao.sh all       # löscht ALLE Droplets mit Prefix "openbao-" + alle DNS-Records
+./destroy-openbao-single.sh           # löscht openbao-$USER + DNS-Record
+./destroy-openbao-single.sh 5         # löscht openbao-tln1 … openbao-tln5 + alle DNS-Records
+./destroy-openbao-single.sh all       # löscht ALLE Droplets mit Prefix "openbao-" + alle DNS-Records
 ```
 
 ### Verhalten
@@ -43,12 +43,17 @@ Löscht alle deployten Droplets und DNS-Records vollständig und automatisiert �
   ```
 - Exit-Code: `0` wenn alles gelöscht (oder nicht vorhanden), `1` bei API-Fehler
 
+### Dokumentation
+
+- `docs/destroy-openbao-single.md` – Usage-Guide mit allen Modi, Beispielausgaben und Troubleshooting
+- `README.md` verlinkt auf diesen Guide unter "Server löschen"
+
 ### Automatisierter Test (Claude)
 
 Claude testet das Destroy-Script nach jedem Multi-Server-Deployment:
 
 1. Deployment von 2 Servern (`tln1`, `tln2`) verifizieren (5 Tests grün)
-2. `./destroy-openbao.sh 2` ausführen
+2. `./destroy-openbao-single.sh 2` ausführen
 3. Prüfen dass Droplets nicht mehr existieren (`doctl compute droplet list`)
 4. Prüfen dass DNS-Records entfernt wurden (`doctl compute domain records list do.t3isp.de`)
 5. Prüfen dass HTTPS nicht mehr erreichbar ist (`curl https://openbao.tln1.do.t3isp.de` → Fehler erwartet)
@@ -100,10 +105,14 @@ Claude führt nach dem Deployment für jeden Server den vollständigen Testplan 
 
 ```
 .
-├── .env                        # Nicht committen – vom Nutzer lokal anlegen
-├── .env.example                # Vorlage mit allen benötigten Variablen
-├── install-openbao-single.sh   # Einstiegspunkt: alles in einem Skript
-├── cloud-init.sh               # Wird auf dem Droplet als user-data ausgeführt
+├── .env                           # Nicht committen – vom Nutzer lokal anlegen
+├── .env.example                   # Vorlage mit allen benötigten Variablen
+├── install-openbao-single.sh      # Deployment: 1 oder N Server hochziehen
+├── destroy-openbao-single.sh      # Cleanup: 1, N oder alle Server löschen
+├── cloud-init.sh                  # Wird auf dem Droplet als user-data ausgeführt
+├── docs/
+│   └── destroy-openbao-single.md  # Usage-Guide für das Destroy-Script
+├── README.md
 └── PRD.md
 ```
 
