@@ -52,7 +52,10 @@ useradd -m -s /bin/bash 11trainingdo 2>/dev/null || true
 echo "11trainingdo:${USER_PASSWORD}" | chpasswd
 
 # SSH Passwort-Auth aktivieren
-sed -i 's/^#\?PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config
+# Ubuntu 22.04: sshd_config.d/*.conf überschreibt die Hauptdatei (erster Treffer gewinnt).
+# 50-cloud-init.conf und 60-cloudimg-settings.conf setzen PasswordAuthentication no.
+# Fix: Datei mit niedrigerer Nummer erzeugt, die zuerst gelesen wird.
+echo 'PasswordAuthentication yes' > /etc/ssh/sshd_config.d/10-training.conf
 systemctl restart sshd
 
 # Pakete

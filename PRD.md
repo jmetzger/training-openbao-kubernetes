@@ -1,6 +1,6 @@
 # PRD: OpenBao Single-Node Deployment auf DigitalOcean
 
-**Status: IN ARBEIT**
+**Status: IN BEARBEITUNG**
 
 ## Ziel
 
@@ -300,6 +300,46 @@ Claude gilt als fertig, wenn alle 5 Tests aus dem Testplan grün sind:
 ✓ SSL Zertifikat gültig
 ✓ nginx läuft
 ```
+
+---
+
+## Bug-Tracker
+
+### BUG-001: SSH Login `11trainingdo` schlug fehl – `Permission denied (publickey)`
+
+**Status:** ✓ Behoben (2026-03-09)
+
+**Symptom:**
+```
+11trainingdo@openbao.jmetzger.do.t3isp.de: Permission denied (publickey).
+```
+
+**Root Cause:**
+Ubuntu 22.04 liefert zwei Drop-in-Dateien in `/etc/ssh/sshd_config.d/`:
+- `50-cloud-init.conf` → `PasswordAuthentication no`
+- `60-cloudimg-settings.conf` → `PasswordAuthentication no`
+
+`sshd` wertet `Include /etc/ssh/sshd_config.d/*.conf` **alphabetisch** aus – der **erste Treffer** gewinnt. Das `sed` in `cloud-init.sh` setzte `PasswordAuthentication yes` nur in der Hauptdatei, die aber nach den Drop-ins kommt. Effektives Ergebnis: `passwordauthentication no`.
+
+**Fix:**
+In `cloud-init.sh` statt `sed` auf der Hauptdatei eine Datei mit niedrigerer Nummer anlegen, die als erste gelesen wird:
+```bash
+echo 'PasswordAuthentication yes' > /etc/ssh/sshd_config.d/10-training.conf
+systemctl restart sshd
+```
+
+**Laufender Server (openbao.jmetzger.do.t3isp.de, 164.92.129.233):**
+Fix wurde manuell via `root`-SSH eingespielt:
+```bash
+echo 'PasswordAuthentication yes' > /etc/ssh/sshd_config.d/10-training.conf
+systemctl restart sshd
+```
+
+**Testergebnis (automatisiert durch Claude):**
+- `sshd -T | grep passwordauthentication` → `passwordauthentication yes` ✓
+- Nutzer `11trainingdo` existiert (uid=1000) ✓
+- Password-Hash gesetzt (`chpasswd 11trainingdo:${USER_PASSWORD}`) ✓
+- SSH bietet `publickey,password` als Auth-Methoden an ✓
 
 ---
 
