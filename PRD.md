@@ -75,7 +75,7 @@ USER_PASSWORD=ENTER_YOUR_PASSWORD
 | **DNS** | `openbao.<USER>.do.t3isp.de` |
 | **Size** | `s-2vcpu-4gb` |
 | **Region** | `fra1` |
-| **Image** | `ubuntu-22-04-x64` |
+| **Image** | `ubuntu-24-04-x64` |
 | **Base Domain** | `do.t3isp.de` (muss in DO vorhanden sein) |
 | **E-Mail** | `j.metzger@t3company.de` (für Let's Encrypt) |
 

@@ -31,7 +31,7 @@ HOSTNAME="openbao-${DROPLET_USER}"
 DOMAIN="openbao.${DROPLET_USER}.do.t3isp.de"
 REGION="fra1"
 SIZE="s-2vcpu-4gb"
-IMAGE="ubuntu-22-04-x64"
+IMAGE="ubuntu-24-04-x64"
 SSH_KEY_PATH="${HOME}/.ssh/id_ed25519_nopass"
 
 echo "╔══════════════════════════════════════════════════╗"
