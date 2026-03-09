@@ -5,6 +5,9 @@
   1. OpenBao Grundlagen
      * [Architektur-Überblick](openbao/overview.md)
      * [Was ist OpenBao?](openbao/what-is-openbao.md)
+
+  2. Installation
+     * [Single Node – Debian + nginx Reverse Proxy](openbao/installation/single.md)
     
 ## Backlog 
 
