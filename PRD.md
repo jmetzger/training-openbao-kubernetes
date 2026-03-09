@@ -37,19 +37,29 @@ mit gültigem Let's Encrypt Zertifikat und vollständig initialisierten Unsealin
 
 ---
 
+## Budget
+
+| Position | Wert |
+|---|---|
+| **Genehmigtes Budget** | EUR 100,- |
+| **Droplet-Kosten** | ca. EUR 0,036/h (`s-2vcpu-4gb` in `fra1`) |
+| **Empfehlung** | Droplet nach dem Training-Tag löschen – Kosten bleiben dann deutlich unter EUR 5,- pro Teilnehmer |
+
+---
+
 ## .env Variablen
 
 Datei `.env` im Projekt-Root (nicht ins Repo committen):
 
 ```bash
-DO_TOKEN=dop_v1_xxx              # DigitalOcean API Token
-USER_PASSWORD=sicheresPasswort   # OpenBao Root-Passwort / Init-Passwort
+DIGITALOCEAN_ACCESS_TOKEN=dop_v1_xxx   # DigitalOcean API Token
+USER_PASSWORD=sicheresPasswort          # OpenBao Root-Passwort / Init-Passwort
 ```
 
 Vorlage `.env.example` wird ins Repo eingecheckt:
 
 ```bash
-DO_TOKEN=ENTER_YOUR_DO_TOKEN
+DIGITALOCEAN_ACCESS_TOKEN=ENTER_YOUR_DO_TOKEN
 USER_PASSWORD=ENTER_YOUR_PASSWORD
 ```
 
@@ -109,7 +119,7 @@ Das Script läuft als `user-data` auf dem Droplet und schreibt seinen Fortschrit
 ### Phasen
 
 **Phase 0 – Pre-Flight Checks**
-- `DO_TOKEN` und `USER_PASSWORD` gesetzt und nicht Platzhalter
+- `DIGITALOCEAN_ACCESS_TOKEN` und `USER_PASSWORD` gesetzt und nicht Platzhalter
 - Root-Check
 
 **Phase 1 – System vorbereiten**
@@ -208,7 +218,7 @@ Das Script kombiniert Deployment und Test in einem Durchlauf. Grundlage ist das 
 3. Hostname = openbao-$USER, Domain = openbao.$USER.do.t3isp.de
 4. Prüfen ob Droplet bereits existiert
    → Wenn ja: fragen ob neu erstellen (destroy + recreate)
-5. cloud-init.sh vorbereiten: DO_TOKEN + USER_PASSWORD einsetzen (sed)
+5. cloud-init.sh vorbereiten: DIGITALOCEAN_ACCESS_TOKEN + USER_PASSWORD einsetzen (sed)
 6. Droplet erstellen mit --user-data-file cloud-init.sh
 7. Warten auf SSH (max. 5 Minuten)
 8. Polling /root/install-status.txt über SSH (alle 30s, max. 15 Minuten):

@@ -1,0 +1,14 @@
+## Erledigt
+
+- [x] PRD.md erstellt (Architektur, Ablauf, Testplan dokumentiert)
+- [x] .env.example erstellt (Vorlage mit DIGITALOCEAN_ACCESS_TOKEN und USER_PASSWORD)
+- [x] cloud-init.sh erstellt (Phase 0-12: System, DNS, Firewall, Docker, OpenBao, nginx, Let's Encrypt)
+- [x] install-openbao-single.sh erstellt (Lokal: .env laden, doctl, Droplet erstellen, Polling, Tests, Credentials)
+
+## In Arbeit
+
+## Ausstehend
+
+- [ ] Testen: install-openbao-single.sh auf echtem DigitalOcean-Account ausführen
+- [ ] Verifizieren: cloud-init Phasen auf echtem Ubuntu 22.04 Droplet
+- [ ] Ggf. .gitignore ergänzen falls weitere sensible Dateien auftauchen
