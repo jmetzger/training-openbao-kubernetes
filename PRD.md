@@ -603,17 +603,19 @@ Warten bis 2026-03-10 23:08 UTC, danach funktioniert Certbot wieder.
 Droplet bleibt für manuelle Analyse erhalten (ID: 557049977, IP: 165.22.93.125)
 ```
 
-**Mögliche Root Causes:**
-- Syntaxfehler in der generierten nginx-Config (z.B. fehlende Semikolons, falsche Variable)
-- Domain-Variable `$DOMAIN` nicht korrekt gesetzt oder leer zum Zeitpunkt der Config-Generierung
-- Sonderzeichen im Hostnamen verursachen ungültigen `server_name`-Eintrag
+**Root Cause (manuell analysiert auf 165.22.93.125):**
+Der DigitalOcean-Paketmirror `mirrors.digitalocean.com` war beim Deployment nicht erreichbar:
+```
+E: Failed to fetch http://mirrors.digitalocean.com/ubuntu/dists/noble/InRelease
+   Something wicked happened resolving 'mirrors.digitalocean.com:http' (-5 - No address associated with hostname)
+E: The repository 'http://mirrors.digitalocean.com/ubuntu noble Release' no longer has a Release file.
+```
+`apt-get install nginx` schlug dadurch still fehl. Phase 1 prüfte den Exit-Code nicht korrekt und meldete trotzdem "Phase 1 OK". Phase 4 scheiterte dann an `nginx -t` mit "command not found", was als "nginx Konfiguration ungültig" geloggt wurde.
 
 **To-Do:**
-- Auf Droplet `165.22.93.125` einloggen und prüfen:
-  - `nginx -t` → genaue Fehlermeldung
-  - `cat /etc/nginx/sites-available/openbao` → erzeugte Config inspizieren
-  - `echo $DOMAIN` in cloud-init-Kontext prüfen
-- Fix in `cloud-init.sh` Phase 4: nach Config-Generierung `nginx -t` ausführen und bei Fehler vollständige Ausgabe ins Log schreiben
+- Phase 1 in `cloud-init.sh`: nach `apt-get install` explizit prüfen ob `nginx` wirklich installiert wurde (`command -v nginx || fail "nginx nicht installiert"`)
+- Bei apt-Fehlern: auf offizielle Ubuntu-Mirror (`archive.ubuntu.com`) als Fallback wechseln oder `apt-get install --fix-missing` nutzen
+- Fehlermeldung in Phase 4 präzisieren: "nginx binary nicht gefunden" statt "nginx Konfiguration ungültig"
 
 ---
 
