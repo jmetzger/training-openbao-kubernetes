@@ -454,7 +454,7 @@ systemctl restart ssh 2>/dev/null || systemctl restart sshd
 
 ### BUG-006: Certbot schlägt alle 3 Versuche fehl trotz DNS-Propagation bestätigt
 
-**Status:** Offen
+**Status:** ✓ Behoben (2026-03-09)
 
 **Symptom:**
 ```
@@ -471,10 +471,11 @@ DNS-Propagation war bestätigt (`dig @8.8.8.8` gibt korrekte IP zurück), dennoc
 - Let's Encrypt Multi-Perspective Validation schlägt von einem bestimmten Standort fehl (siehe BUG-002), und 30s Pause reicht nicht für einen anderen Validator-Satz
 - Certbot-Fehlermeldung nicht im Log sichtbar – genaue Fehlerursache unklar
 
-**To-Do:**
-- Certbot-Ausgabe vollständig ins Log schreiben (`certbot ... 2>&1 | tee -a /root/install-status.txt`)
-- Vor Certbot prüfen, ob nginx auf Port 80 antwortet (`curl -s http://$DOMAIN/`)
-- Anzahl Retry-Versuche erhöhen oder Pause verlängern
+**Fix in `cloud-init.sh` Phase 5:**
+
+1. Vor Certbot: nginx Port-80-Check (`curl http://$DOMAIN/.well-known/acme-challenge/test`). Bei HTTP 000: nginx neu starten.
+2. Certbot-Output ins Log: `2>&1 | tee -a "$STATUS_FILE"` – genaue Fehlerursache bei zukünftigen Fehlern sichtbar.
+3. Retry-Versuche von 3 auf 5 erhöht, Pause von 30s auf 60s verlängert.
 
 ---
 

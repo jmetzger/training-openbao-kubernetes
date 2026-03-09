@@ -191,23 +191,36 @@ for i in $(seq 1 60); do
 done
 $DNS_READY || log "WARNUNG: DNS nach 10 Minuten noch nicht vollständig propagiert – starte Certbot trotzdem"
 
-# BUG-002: Retry-Schleife (3 Versuche, 30s Pause)
+# BUG-006: Vor Certbot prüfen ob nginx auf Port 80 antwortet
+log "Prüfe nginx Port 80..."
+NGINX_HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
+  --max-time 10 "http://${DOMAIN}/.well-known/acme-challenge/test" 2>/dev/null || true)
+log "nginx Port 80 Antwort: HTTP $NGINX_HTTP_CODE"
+if [[ "$NGINX_HTTP_CODE" == "000" ]]; then
+  log "WARNUNG: nginx antwortet nicht auf Port 80 – warte 15s und prüfe erneut"
+  sleep 15
+  nginx -t && systemctl restart nginx || fail "nginx Start fehlgeschlagen"
+  sleep 5
+fi
+
+# BUG-002/BUG-006: Retry-Schleife (5 Versuche, 60s Pause) + vollständiges Logging
 CERTBOT_OK=false
-for attempt in 1 2 3; do
+for attempt in 1 2 3 4 5; do
+  log "Certbot Versuch $attempt/5..."
   if certbot --nginx \
     --non-interactive \
     --agree-tos \
     --email "$EMAIL" \
     --no-eff-email \
-    -d "$DOMAIN"; then
+    -d "$DOMAIN" 2>&1 | tee -a "$STATUS_FILE"; then
     CERTBOT_OK=true
     break
   fi
-  log "Certbot Versuch $attempt fehlgeschlagen – warte 30s..."
-  sleep 30
+  log "Certbot Versuch $attempt fehlgeschlagen – warte 60s..."
+  sleep 60
 done
 
-$CERTBOT_OK || fail "Certbot nach 3 Versuchen fehlgeschlagen"
+$CERTBOT_OK || fail "Certbot nach 5 Versuchen fehlgeschlagen"
 
 [[ -f "/etc/letsencrypt/live/${DOMAIN}/fullchain.pem" ]] \
   || fail "Zertifikat nicht gefunden"

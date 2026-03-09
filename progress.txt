@@ -29,6 +29,16 @@
   - Root Cause 2: `10-training.conf` anlegen reicht nicht – bestehende Drop-in-Dateien explizit per sed patchen
   - Fix: Loop über alle `.conf` in sshd_config.d + Hauptkonfiguration wird ebenfalls gepatcht
 
+- [x] BUG-005 bestätigt behoben: SSH Passwort-Login funktioniert nach BUG-004-Fix
+- [x] BUG-006 behoben: Certbot schlägt alle Versuche fehl trotz DNS-Propagation
+  - Fix 1: Vor Certbot nginx Port-80-Check (`curl http://$DOMAIN/.well-known/acme-challenge/test`)
+    → Bei HTTP 000 (nginx antwortet nicht): 15s warten, nginx neu starten
+  - Fix 2: Certbot-Output vollständig ins Log (`2>&1 | tee -a $STATUS_FILE`)
+    → Genaue Fehlerursache bei zukünftigen Fehlern sichtbar
+  - Fix 3: Retry-Versuche von 3 auf 5 erhöht, Pause von 30s auf 60s verlängert
+    → Mehr Zeit für Let's Encrypt Multi-Perspective Validation
+
 ## Ausstehend
 
+- [ ] BUG-006 im echten Deployment verifizieren (Agentic Loop)
 - [ ] Droplet nach Training-Tag löschen (Kosten sparen – manuell, nach Training)
