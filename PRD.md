@@ -16,6 +16,47 @@ mit gültigem Let's Encrypt Zertifikat. **OpenBao wird in diesem Schritt nicht i
 
 ---
 
+## Feature: Destroy-Script (`destroy-openbao.sh`)
+
+### Zweck
+
+Löscht alle deployten Droplets und DNS-Records vollständig und automatisiert – sowohl für Single-Deployments als auch für Trainings-Server.
+
+### Aufruf
+
+```bash
+./destroy-openbao.sh           # löscht openbao-$USER + DNS-Record
+./destroy-openbao.sh 5         # löscht openbao-tln1 … openbao-tln5 + alle DNS-Records
+./destroy-openbao.sh all       # löscht ALLE Droplets mit Prefix "openbao-" + alle DNS-Records
+```
+
+### Verhalten
+
+- Lädt `.env` (benötigt `DIGITALOCEAN_ACCESS_TOKEN`)
+- Bestätigung vor dem Löschen: zeigt Liste aller zu löschenden Droplets und fragt `Wirklich löschen? [y/N]`
+- Löscht **parallel**: Droplet via `doctl compute droplet delete` + DNS-Record via `doctl compute domain records delete`
+- Gibt Gesamtübersicht aus:
+  ```
+  tln1  ✓  Droplet gelöscht, DNS-Record entfernt
+  tln2  ✓  Droplet gelöscht, DNS-Record entfernt
+  tln3  ✗  Droplet nicht gefunden (bereits gelöscht?)
+  ```
+- Exit-Code: `0` wenn alles gelöscht (oder nicht vorhanden), `1` bei API-Fehler
+
+### Automatisierter Test (Claude)
+
+Claude testet das Destroy-Script nach jedem Multi-Server-Deployment:
+
+1. Deployment von 2 Servern (`tln1`, `tln2`) verifizieren (5 Tests grün)
+2. `./destroy-openbao.sh 2` ausführen
+3. Prüfen dass Droplets nicht mehr existieren (`doctl compute droplet list`)
+4. Prüfen dass DNS-Records entfernt wurden (`doctl compute domain records list do.t3isp.de`)
+5. Prüfen dass HTTPS nicht mehr erreichbar ist (`curl https://openbao.tln1.do.t3isp.de` → Fehler erwartet)
+
+Das Script gilt als fertig wenn alle 5 Destroy-Tests grün sind.
+
+---
+
 ## Feature: Multi-Server-Deployment (Trainings-Modus)
 
 ### Aufruf
