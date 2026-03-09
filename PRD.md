@@ -201,7 +201,7 @@ Das Script läuft als `user-data` auf dem Droplet und schreibt seinen Fortschrit
 - Root-Check
 
 **Phase 1 – System vorbereiten**
-- Nutzer `11trainingdo` anlegen, SSH-Passwort-Authentifizierung aktivieren
+- Nutzer `11trainingdo` anlegen, SSH-Passwort-Authentifizierung aktivieren, User in `sudoers` eintragen (passwordless sudo)
 - Pakete installieren: `nginx`, `certbot`, `python3-certbot-nginx`, `curl`, `wget`, `dnsutils`, `ufw`
 - `doctl` installieren – Version **1.151.0** (Stand: 2026-03-09):
   ```bash
