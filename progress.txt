@@ -2,16 +2,20 @@
 
 - [x] PRD.md erstellt (Architektur, Ablauf, Testplan dokumentiert)
 - [x] .env.example erstellt (Vorlage mit DIGITALOCEAN_ACCESS_TOKEN und USER_PASSWORD)
-- [x] cloud-init.sh erstellt (Phase 0-12: System, DNS, Firewall, Docker, OpenBao, nginx, Let's Encrypt)
-- [x] install-openbao-single.sh erstellt (Lokal: .env laden, doctl, Droplet erstellen, Polling, Tests, Credentials)
 - [x] .gitignore erstellt (.env, temporäre Dateien, Editor-Dateien)
 - [x] PRD.md erweitert: Agentic Loop Sektion, Status-Header
+- [x] cloud-init.sh auf PRD ausgerichtet (Phase 0-8: System, DNS, Firewall, nginx HTTP, Let's Encrypt, nginx HTTPS+statische Seite, Tests, DONE)
+  - Kein Docker, kein OpenBao – nur nginx + certbot als native systemd-Services
+  - Statische HTML-Seite "Server bereit – OpenBao folgt im nächsten Schritt"
+- [x] install-openbao-single.sh auf PRD ausgerichtet (5 Tests laut Testplan, Server-Info Ausgabe aus PRD)
+  - Tests: DNS Resolution, HTTP→HTTPS Redirect, HTTPS erreichbar, SSL gültig, nginx aktiv
+  - Kein OpenBao-Credentials-Output (OpenBao nicht im Scope)
 
 ## In Arbeit
 
-- [ ] Testen: install-openbao-single.sh auf echtem DigitalOcean-Account (Iteration 1)
+- [ ] Testen: install-openbao-single.sh auf echtem DigitalOcean-Account (Agentic Loop, max. 5 Iterationen)
 
 ## Ausstehend
 
 - [ ] Verifizieren: cloud-init Phasen auf echtem Ubuntu 22.04 Droplet
-- [ ] Ggf. Scripts nach Testergebnis anpassen (Agentic Loop, max. 5 Iterationen)
+- [ ] Ggf. Scripts nach Testergebnis anpassen (Agentic Loop)

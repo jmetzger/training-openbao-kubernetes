@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# install-openbao-single.sh – Einstiegspunkt: OpenBao Single-Node auf DigitalOcean
+# install-openbao-single.sh – Einstiegspunkt: Server für OpenBao Training auf DigitalOcean
+# Ziel: Server mit nginx + Let's Encrypt bereitstellen (OpenBao folgt im nächsten Schritt)
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -34,7 +35,7 @@ IMAGE="ubuntu-22-04-x64"
 SSH_KEY_PATH="${HOME}/.ssh/id_ed25519_nopass"
 
 echo "╔══════════════════════════════════════════════════╗"
-echo "║    OpenBao Single-Node Deployment                ║"
+echo "║    OpenBao Training – Server-Setup               ║"
 echo "╚══════════════════════════════════════════════════╝"
 echo ""
 echo "  Hostname : $HOSTNAME"
@@ -43,11 +44,11 @@ echo "  Region   : $REGION / $SIZE"
 echo ""
 
 # =============================================================
-# Schritt 2 – doctl installieren / prüfen
+# Schritt 3 – doctl installieren / prüfen
 # =============================================================
 if ! command -v doctl &>/dev/null; then
   echo "Installiere doctl..."
-  DOCTL_VERSION="1.110.0"
+  DOCTL_VERSION="1.151.0"
   curl -sL "https://github.com/digitalocean/doctl/releases/download/v${DOCTL_VERSION}/doctl-${DOCTL_VERSION}-linux-amd64.tar.gz" \
     | tar -xz -C /usr/local/bin
 fi
@@ -59,7 +60,7 @@ doctl account get >/dev/null \
 echo "doctl authentifiziert."
 
 # =============================================================
-# Schritt 3 – SSH Key prüfen
+# Schritt 4 – SSH Key prüfen
 # =============================================================
 if [[ ! -f "${SSH_KEY_PATH}.pub" ]]; then
   echo "FEHLER: SSH Public Key nicht gefunden: ${SSH_KEY_PATH}.pub"
@@ -79,7 +80,7 @@ fi
 echo "SSH Key gefunden (ID: $SSH_KEY_ID)"
 
 # =============================================================
-# Schritt 4 – Bestehendes Droplet prüfen
+# Schritt 5 – Bestehendes Droplet prüfen
 # =============================================================
 EXISTING_ID=$(doctl compute droplet list --format Name,ID --no-header \
   | awk -v h="$HOSTNAME" '$1 == h {print $2}' | head -1 || true)
@@ -100,12 +101,11 @@ if [[ -n "$EXISTING_ID" ]]; then
 fi
 
 # =============================================================
-# Schritt 5 – cloud-init.sh vorbereiten (Platzhalter ersetzen)
+# Schritt 6 – cloud-init.sh vorbereiten (Platzhalter ersetzen)
 # =============================================================
 CLOUD_INIT_SRC="$SCRIPT_DIR/cloud-init.sh"
 [[ ! -f "$CLOUD_INIT_SRC" ]] && { echo "FEHLER: cloud-init.sh nicht gefunden"; exit 1; }
 
-# Platzhalter ersetzen – Inhalt direkt in Variable laden (kein Temp-File nötig)
 CLOUD_INIT_CONTENT=$(sed \
   -e "s|__DIGITALOCEAN_ACCESS_TOKEN__|${DIGITALOCEAN_ACCESS_TOKEN}|g" \
   -e "s|__USER_PASSWORD__|${USER_PASSWORD}|g" \
@@ -113,7 +113,7 @@ CLOUD_INIT_CONTENT=$(sed \
   "$CLOUD_INIT_SRC")
 
 # =============================================================
-# Schritt 6 – Droplet erstellen
+# Schritt 7 – Droplet erstellen
 # =============================================================
 echo ""
 echo "Erstelle Droplet '$HOSTNAME'..."
@@ -135,7 +135,7 @@ DROPLET_IP=$(doctl compute droplet get "$DROPLET_ID" --format PublicIPv4 --no-he
 echo "Droplet IP: $DROPLET_IP"
 
 # =============================================================
-# Schritt 7 – SSH abwarten (max. 5 Minuten)
+# Schritt 8 – SSH abwarten (max. 5 Minuten)
 # =============================================================
 echo ""
 echo "Warte auf SSH-Zugang..."
@@ -153,7 +153,7 @@ done
 $SSH_READY || { echo "FEHLER: SSH nicht erreichbar nach 5 Minuten"; exit 1; }
 
 # =============================================================
-# Schritt 8 – Polling /root/install-status.txt (max. 15 Minuten)
+# Schritt 9 – Polling /root/install-status.txt (max. 15 Minuten)
 # =============================================================
 echo ""
 echo "Warte auf cloud-init Abschluss (max. 15 Minuten)..."
@@ -196,7 +196,7 @@ if ! $INSTALL_DONE; then
 fi
 
 # =============================================================
-# Schritt 9 – Tests
+# Schritt 10 – Tests
 # =============================================================
 echo ""
 echo "=== Tests ==="
@@ -223,83 +223,65 @@ else
   ERRORS=$((ERRORS + 1))
 fi
 
-# Test 3+4: HTTPS erreichbar + SSL gültig
-echo -n "[3+4] HTTPS + SSL... "
+# Test 3: HTTPS erreichbar
+echo -n "[3] HTTPS erreichbar... "
 HTTPS_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
   --max-time 10 "https://${DOMAIN}/" 2>/dev/null || true)
-if [[ "$HTTPS_CODE" =~ ^(200|307|473)$ ]]; then
+if [[ "$HTTPS_CODE" =~ ^[23] ]]; then
   echo "OK (HTTP $HTTPS_CODE)"
 else
   echo "FEHLER (HTTP $HTTPS_CODE)"
   ERRORS=$((ERRORS + 1))
 fi
 
-# Test 5: OpenBao Health API
-echo -n "[5] OpenBao Health API... "
-HEALTH=$(curl -s --max-time 10 "https://${DOMAIN}/v1/sys/health" 2>/dev/null || true)
-if echo "$HEALTH" | python3 -c \
-    "import sys,json; d=json.load(sys.stdin); assert d.get('initialized') and not d.get('sealed')" \
-    2>/dev/null; then
-  echo "OK (initialized=true, sealed=false)"
+# Test 4: SSL Zertifikat gültig (curl ohne -k)
+echo -n "[4] SSL Zertifikat gültig... "
+SSL_RESULT=$(curl -s -o /dev/null -w "%{http_code}" \
+  --max-time 10 "https://${DOMAIN}/" 2>/dev/null || echo "FEHLER")
+if [[ "$SSL_RESULT" != "FEHLER" && "$SSL_RESULT" != "000" ]]; then
+  echo "OK"
 else
-  echo "FEHLER: $HEALTH"
+  echo "FEHLER (SSL-Zertifikat ungültig oder nicht erreichbar)"
   ERRORS=$((ERRORS + 1))
 fi
 
-# Test 6: OpenBao UI
-echo -n "[6] OpenBao UI... "
-UI_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
-  --max-time 10 "https://${DOMAIN}/ui/" 2>/dev/null || true)
-if [[ "$UI_CODE" == "200" ]]; then
+# Test 5: nginx läuft
+echo -n "[5] nginx aktiv... "
+NGINX_STATUS=$(ssh -i "$SSH_KEY_PATH" -o StrictHostKeyChecking=no \
+  root@"$DROPLET_IP" \
+  "systemctl is-active nginx" 2>/dev/null || true)
+if [[ "$NGINX_STATUS" == "active" ]]; then
   echo "OK"
 else
-  echo "FEHLER (HTTP $UI_CODE)"
+  echo "FEHLER (Status: ${NGINX_STATUS:-unbekannt})"
   ERRORS=$((ERRORS + 1))
 fi
 
-# Test 7: Docker Container
-echo -n "[7] Docker Container... "
-CONTAINERS=$(ssh -i "$SSH_KEY_PATH" -o StrictHostKeyChecking=no \
-  root@"$DROPLET_IP" \
-  "cd /opt/openbao && docker-compose ps --services --filter 'status=running'" \
-  2>/dev/null || true)
-if echo "$CONTAINERS" | grep -q "openbao" && echo "$CONTAINERS" | grep -q "nginx"; then
-  echo "OK"
-else
-  echo "WARNUNG: Nicht alle Container laufen ($CONTAINERS)"
-fi
-
 # =============================================================
-# Schritt 10 – Credentials ausgeben
+# Schritt 11 – Ergebnis ausgeben
 # =============================================================
-CREDENTIALS=$(ssh -i "$SSH_KEY_PATH" -o StrictHostKeyChecking=no \
-  root@"$DROPLET_IP" \
-  "cat /root/openbao-credentials.txt" 2>/dev/null || true)
-
-ROOT_TOKEN=$(echo "$CREDENTIALS" | awk -F= '/ROOT_TOKEN/ {print $2}')
-UNSEAL_KEY=$(echo "$CREDENTIALS" | awk -F= '/UNSEAL_KEY/ {print $2}')
-
 echo ""
 echo "═══════════════════════════════════════════════════"
-echo "         OPENBAO INSTALLATION - CREDENTIALS"
+echo "         SERVER BEREIT FUER OPENBAO TRAINING"
 echo "═══════════════════════════════════════════════════"
 echo ""
-echo "  URL:           https://${DOMAIN}/ui/"
+echo "  URL:           https://${DOMAIN}"
 echo "  Droplet IP:    $DROPLET_IP"
+echo "  SSH:           ssh 11trainingdo@${DROPLET_IP}"
+echo "  Passwort:      ${USER_PASSWORD}"
 echo ""
-echo "  ROOT TOKEN:    $ROOT_TOKEN"
-echo "  UNSEAL KEY:    $UNSEAL_KEY"
+echo "  STATUS:"
+echo "    nginx:       aktiv (systemd)"
+echo "    certbot:     automatische Erneuerung via systemd-Timer"
+echo "    OpenBao:     noch nicht installiert (folgt im naechsten Schritt)"
 echo ""
-echo "  Credentials gespeichert in: /root/openbao-credentials.txt (chmod 600)"
+echo "  NAECHSTER SCHRITT:"
+echo "    OpenBao installieren und starten:"
+echo "    ssh 11trainingdo@${DROPLET_IP}"
 echo ""
-echo "  DOCKER BEFEHLE:"
-echo "     Status:   cd /opt/openbao && docker-compose ps"
-echo "     Logs:     docker-compose logs -f openbao"
-echo "     Restart:  docker-compose restart"
-echo "     Unseal:   docker exec openbao bao operator unseal $UNSEAL_KEY"
-echo ""
-echo "  SSL ERNEUERUNG:"
-echo "     Automatisch alle 12h via Certbot Container"
+echo "  HILFREICHE BEFEHLE:"
+echo "    nginx Logs:  journalctl -u nginx -f"
+echo "    nginx Test:  nginx -t"
 echo ""
 echo "═══════════════════════════════════════════════════"
 
