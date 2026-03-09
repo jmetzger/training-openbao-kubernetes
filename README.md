@@ -5,6 +5,10 @@
   1. OpenBao Grundlagen
      * [Architektur-Überblick](openbao/overview.md)
      * [Was ist OpenBao?](openbao/what-is-openbao.md)
+    
+## Backlog 
+
+   1. OpenBao Grundlagen 
      * [OpenBao vs. HashiCorp Vault](openbao/openbao-vs-vault.md)
      * [Seal / Unseal Mechanismus](openbao/seal-unseal.md)
      * [Auth Methods](openbao/auth-methods.md)
