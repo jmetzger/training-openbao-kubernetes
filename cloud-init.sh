@@ -170,13 +170,38 @@ log "Phase 4 OK"
 # =============================================================
 log "=== Phase 5: Let's Encrypt Zertifikat ==="
 
-certbot --nginx \
-  --non-interactive \
-  --agree-tos \
-  --email "$EMAIL" \
-  --no-eff-email \
-  -d "$DOMAIN" \
-  || fail "Certbot fehlgeschlagen"
+# BUG-003: Vor Certbot auf vollständige DNS-Propagation warten (max. 10 Minuten)
+log "Warte auf vollständige DNS-Propagation für $DOMAIN (max. 10 Minuten)..."
+DNS_READY=false
+for i in $(seq 1 60); do
+  RESOLVED=$(dig +short "$DOMAIN" @8.8.8.8 2>/dev/null | head -1 || true)
+  if [[ "$RESOLVED" == "$DROPLET_IP" ]]; then
+    DNS_READY=true
+    log "DNS bereit: $DOMAIN -> $DROPLET_IP (nach ${i}x10s)"
+    break
+  fi
+  log "DNS-Wait $i/60: $DOMAIN -> '${RESOLVED:-keine Antwort}'"
+  sleep 10
+done
+$DNS_READY || log "WARNUNG: DNS nach 10 Minuten noch nicht vollständig propagiert – starte Certbot trotzdem"
+
+# BUG-002: Retry-Schleife (3 Versuche, 30s Pause)
+CERTBOT_OK=false
+for attempt in 1 2 3; do
+  if certbot --nginx \
+    --non-interactive \
+    --agree-tos \
+    --email "$EMAIL" \
+    --no-eff-email \
+    -d "$DOMAIN"; then
+    CERTBOT_OK=true
+    break
+  fi
+  log "Certbot Versuch $attempt fehlgeschlagen – warte 30s..."
+  sleep 30
+done
+
+$CERTBOT_OK || fail "Certbot nach 3 Versuchen fehlgeschlagen"
 
 [[ -f "/etc/letsencrypt/live/${DOMAIN}/fullchain.pem" ]] \
   || fail "Zertifikat nicht gefunden"

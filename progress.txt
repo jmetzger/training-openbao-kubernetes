@@ -20,6 +20,9 @@
 
 - [x] BUG-002 dokumentiert: Certbot Multi-Perspective Validation – Retry-Logik in cloud-init.sh, Bugbeschreibung in PRD.md
 - [x] PRD.md Status auf ABGESCHLOSSEN gesetzt
+- [x] BUG-003 behoben: DNS-Propagation-Wait (max. 10 Min.) vor Certbot-Aufruf in Phase 5 von cloud-init.sh
+  - Polling: `dig @8.8.8.8 $DOMAIN +short` bis Droplet-IP zurückkommt (60x10s)
+  - Zusätzlich: Retry-Schleife (3 Versuche, 30s Pause) aus BUG-002 in Code übernommen (war nur dokumentiert)
 
 ## Ausstehend
 

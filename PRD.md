@@ -383,7 +383,7 @@ Certbot wurde manuell erneut ausgeführt (erfolgreich). Phase 6 nginx-Config wur
 
 ### BUG-003: Certbot schlägt beim ersten Versuch fehl wegen DNS-Propagation
 
-**Status:** Offen
+**Status:** ✓ Behoben (2026-03-09)
 
 **Symptom:**
 Certbot schlägt beim ersten Deployment-Versuch fehl, obwohl der Server korrekt läuft. Ein zweiter Versuch (einige Minuten später) gelingt.
@@ -391,11 +391,23 @@ Certbot schlägt beim ersten Deployment-Versuch fehl, obwohl der Server korrekt 
 **Root Cause:**
 Let's Encrypt validiert Domains von mehreren geografischen Standorten aus. Kurz nach dem Erstellen des Droplets und dem Setzen des DNS-A-Records zeigen noch nicht alle Nameserver weltweit auf die neue IP – manche cachen noch die alte IP (oder NXDOMAIN). Je nachdem, welcher Let's Encrypt-Validator welchen Nameserver trifft, sieht er unterschiedliche IPs. Da alle Validatoren die gleiche IP sehen müssen, schlägt die Validierung fehl, sobald mindestens ein Validator einen veralteten Nameserver erwischt.
 
-**Workaround (aktuell):**
-Die bestehende Retry-Schleife aus BUG-002 (3 Versuche, 30s Pause) fängt viele Fälle ab, aber bei langsamer DNS-Propagation reicht das nicht immer.
+**Fix in `cloud-init.sh` Phase 5:**
 
-**To-Do:**
-Vor dem Certbot-Aufruf aktiv auf vollständige DNS-Propagation warten: Solange `dig @8.8.8.8 $DOMAIN +short` nicht die erwartete Droplet-IP zurückgibt, warten (Polling, max. 10 Minuten). Erst dann Certbot starten.
+Vor dem Certbot-Aufruf wird aktiv auf vollständige DNS-Propagation gewartet (Polling, max. 10 Minuten):
+
+```bash
+DNS_READY=false
+for i in $(seq 1 60); do
+  RESOLVED=$(dig +short "$DOMAIN" @8.8.8.8 2>/dev/null | head -1 || true)
+  if [[ "$RESOLVED" == "$DROPLET_IP" ]]; then
+    DNS_READY=true
+    break
+  fi
+  sleep 10
+done
+```
+
+Zusätzlich wurde die Retry-Schleife aus BUG-002 (3 Versuche, 30s Pause) in den Code übernommen – sie war bisher nur dokumentiert, aber nicht im Skript implementiert.
 
 ---
 
