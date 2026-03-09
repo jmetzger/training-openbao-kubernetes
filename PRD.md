@@ -1,6 +1,6 @@
 # PRD: OpenBao Single-Node Deployment auf DigitalOcean
 
-**Status: ABGESCHLOSSEN**
+**Status: IN BEARBEITUNG**
 
 ## Ziel
 
@@ -408,6 +408,30 @@ done
 ```
 
 Zusätzlich wurde die Retry-Schleife aus BUG-002 (3 Versuche, 30s Pause) in den Code übernommen – sie war bisher nur dokumentiert, aber nicht im Skript implementiert.
+
+### BUG-004: SSH Passwort-Login schlägt weiterhin fehl – `Permission denied (publickey)` auf Ubuntu 24.04
+
+**Status:** Offen
+
+**Symptom:**
+```
+11training@openbao.jmetzger.do.t3isp.de: Permission denied (publickey).
+```
+
+SSH bietet nur `publickey` als Auth-Methode an, obwohl `PasswordAuthentication yes` per `cloud-init.sh` gesetzt werden sollte.
+
+**Beobachtung:**
+Der Fix aus BUG-001 (Datei `/etc/ssh/sshd_config.d/10-training.conf` anlegen) funktionierte auf Ubuntu 22.04. Auf Ubuntu 24.04 (nach dem Image-Upgrade) tritt das Problem erneut auf – möglicherweise hat sich die Drop-in-Struktur oder die Verarbeitungsreihenfolge geändert.
+
+**Mögliche Root Causes:**
+- Ubuntu 24.04 liefert ggf. weitere oder anders benannte Drop-in-Dateien, die Vorrang vor `10-training.conf` haben
+- Der `systemctl restart sshd`-Aufruf in cloud-init greift möglicherweise zu früh (Race Condition mit cloud-init-Modulen)
+- Der Nutzername hat sich geändert: BUG-001 war `11trainingdo`, jetzt ist es `11training` – ggf. ist der User gar nicht angelegt
+
+**To-Do:**
+- Auf dem laufenden Server prüfen: `sshd -T | grep passwordauthentication` und `getent passwd 11training`
+- Alle Dateien in `/etc/ssh/sshd_config.d/` inspizieren und Verarbeitungsreihenfolge klären
+- `cloud-init.sh` Phase 4 (SSH-Konfiguration) auf Ubuntu 24.04 anpassen
 
 ---
 
