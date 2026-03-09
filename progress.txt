@@ -10,12 +10,14 @@
 - [x] install-openbao-single.sh auf PRD ausgerichtet (5 Tests laut Testplan, Server-Info Ausgabe aus PRD)
   - Tests: DNS Resolution, HTTP→HTTPS Redirect, HTTPS erreichbar, SSL gültig, nginx aktiv
   - Kein OpenBao-Credentials-Output (OpenBao nicht im Scope)
-
-## In Arbeit
-
-- [ ] Testen: install-openbao-single.sh auf echtem DigitalOcean-Account (Agentic Loop, max. 5 Iterationen)
+- [x] AUTO_MODE=1 Support in install-openbao-single.sh (nicht-interaktiv für Agentic Loop)
+- [x] Agentic Loop Test: install-openbao-single.sh auf echtem DigitalOcean-Account
+  - Iteration 1: ALLE 5 Tests grün – kein Fix notwendig
+  - Droplet: openbao-jmetzger (ID: 556993291, IP: 164.92.129.233)
+  - Domain: https://openbao.jmetzger.do.t3isp.de – erreichbar mit gültigem SSL
+  - Laufzeit cloud-init: ca. 50 Sekunden (Phase 1 bis Phase 7)
+  - Ergebnis: ✓ DNS Resolution, ✓ HTTP→HTTPS Redirect, ✓ HTTPS erreichbar, ✓ SSL gültig, ✓ nginx aktiv
 
 ## Ausstehend
 
-- [ ] Verifizieren: cloud-init Phasen auf echtem Ubuntu 22.04 Droplet
-- [ ] Ggf. Scripts nach Testergebnis anpassen (Agentic Loop)
+- [ ] Droplet nach Training-Tag löschen (Kosten sparen)
