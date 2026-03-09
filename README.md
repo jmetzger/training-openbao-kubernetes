@@ -8,7 +8,7 @@
     
 ## Backlog 
 
-   1. OpenBao Grundlagen 
+  1. OpenBao Grundlagen 
      * [OpenBao vs. HashiCorp Vault](openbao/openbao-vs-vault.md)
      * [Seal / Unseal Mechanismus](openbao/seal-unseal.md)
      * [Auth Methods](openbao/auth-methods.md)
