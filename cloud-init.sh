@@ -31,9 +31,9 @@ fail() {
 # =============================================================
 log "=== Phase 0: Pre-Flight Checks ==="
 
-[[ "$DIGITALOCEAN_ACCESS_TOKEN" == "__DIGITALOCEAN_ACCESS_TOKEN__" ]] && fail "DIGITALOCEAN_ACCESS_TOKEN nicht ersetzt"
+[[ "$DIGITALOCEAN_ACCESS_TOKEN" == __*__ ]] && fail "DIGITALOCEAN_ACCESS_TOKEN nicht ersetzt"
 [[ -z "$DIGITALOCEAN_ACCESS_TOKEN" ]] && fail "DIGITALOCEAN_ACCESS_TOKEN leer"
-[[ "$USER_PASSWORD" == "__USER_PASSWORD__" ]] && fail "USER_PASSWORD nicht ersetzt"
+[[ "$USER_PASSWORD" == __*__ ]] && fail "USER_PASSWORD nicht ersetzt"
 [[ -z "$USER_PASSWORD" ]] && fail "USER_PASSWORD leer"
 [[ "$EUID" -ne 0 ]] && fail "Muss als root ausgeführt werden"
 

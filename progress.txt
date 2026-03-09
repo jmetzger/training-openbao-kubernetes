@@ -4,11 +4,14 @@
 - [x] .env.example erstellt (Vorlage mit DIGITALOCEAN_ACCESS_TOKEN und USER_PASSWORD)
 - [x] cloud-init.sh erstellt (Phase 0-12: System, DNS, Firewall, Docker, OpenBao, nginx, Let's Encrypt)
 - [x] install-openbao-single.sh erstellt (Lokal: .env laden, doctl, Droplet erstellen, Polling, Tests, Credentials)
+- [x] .gitignore erstellt (.env, temporäre Dateien, Editor-Dateien)
+- [x] PRD.md erweitert: Agentic Loop Sektion, Status-Header
 
 ## In Arbeit
 
+- [ ] Testen: install-openbao-single.sh auf echtem DigitalOcean-Account (Iteration 1)
+
 ## Ausstehend
 
-- [ ] Testen: install-openbao-single.sh auf echtem DigitalOcean-Account ausführen
 - [ ] Verifizieren: cloud-init Phasen auf echtem Ubuntu 22.04 Droplet
-- [ ] Ggf. .gitignore ergänzen falls weitere sensible Dateien auftauchen
+- [ ] Ggf. Scripts nach Testergebnis anpassen (Agentic Loop, max. 5 Iterationen)

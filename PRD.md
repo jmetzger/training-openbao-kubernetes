@@ -1,5 +1,7 @@
 # PRD: OpenBao Single-Node Deployment auf DigitalOcean
 
+**Status: IN ARBEIT**
+
 ## Ziel
 
 Self-service Deployment eines OpenBao Servers auf DigitalOcean per einzigem Kommando:
@@ -291,6 +293,64 @@ Nach erfolgreichem Deployment wird ausgegeben:
 - Auto-Unseal (KMS)
 - LDAP / OIDC Auth
 - Policies und Secrets vorkonfigurieren
+
+---
+
+## Automatisiertes Testen durch Claude (Agentic Loop)
+
+### Ziel
+
+Claude führt `install-openbao-single.sh` eigenständig aus und iteriert so lange, bis alle Tests bestehen. Kein manueller Eingriff nötig – Claude liest Fehlerausgaben, analysiert die Ursache, passt die Skripte an und startet neu.
+
+### Ablauf (Claude als Agent)
+
+```
+1. .env prüfen (DIGITALOCEAN_ACCESS_TOKEN, USER_PASSWORD gesetzt)
+2. install-openbao-single.sh ausführen
+3. Ausgabe analysieren:
+   a. Alle Tests grün → FERTIG
+   b. Fehler gefunden:
+      - Fehlerursache identifizieren (Log-Ausgabe, Phasenstatus)
+      - Betroffenes Skript anpassen (cloud-init.sh oder install-openbao-single.sh)
+      - Droplet löschen (doctl compute droplet delete --force)
+      - Weiter mit Schritt 2
+4. Nach maximal 5 Iterationen: Abbruch mit Fehlerbericht
+```
+
+### Regeln für den Agentic Loop
+
+| Regel | Beschreibung |
+|---|---|
+| **Max. Iterationen** | 5 – danach Abbruch und Fehlerbericht an Nutzer |
+| **Droplet vor Neustart löschen** | Claude löscht das alte Droplet bevor es ein neues erstellt |
+| **Kein blindes Retry** | Jede Iteration muss eine konkrete Änderung am Skript enthalten |
+| **Credentials sichern** | Nach erfolgreichem Run: Root Token und Unseal Key ausgeben |
+| **Kosten im Blick** | Fehlgeschlagene Droplets sofort löschen, nie länger als nötig laufen lassen |
+
+### Fehlerkategorien und Reaktion
+
+| Fehler | Reaktion |
+|---|---|
+| DNS-Propagation Timeout | Wartezeit im Script erhöhen |
+| Certbot-Fehler (DNS noch nicht bereit) | Sleep vor Certbot-Aufruf verlängern |
+| OpenBao startet nicht | HCL-Konfiguration prüfen und korrigieren |
+| SSH-Verbindung schlägt fehl | SSH-Key-Pfad oder DO SSH-Key-ID prüfen |
+| docker-compose Fehler | Image-Namen oder Volume-Mounts korrigieren |
+| cloud-init bricht ab (`[FAILED]`) | Logs via SSH holen, Fehlerphase identifizieren |
+
+### Abbruchkriterium (Erfolg)
+
+Claude gilt als fertig, wenn alle 7 Tests aus dem Testplan grün sind:
+
+```
+✓ DNS Resolution
+✓ HTTP → HTTPS Redirect
+✓ HTTPS erreichbar
+✓ SSL Zertifikat gültig
+✓ OpenBao Health API (initialized=true, sealed=false)
+✓ OpenBao UI erreichbar
+✓ Docker Container laufen (openbao, nginx, certbot)
+```
 
 ---
 

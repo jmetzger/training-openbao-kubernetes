@@ -66,7 +66,7 @@ if [[ ! -f "${SSH_KEY_PATH}.pub" ]]; then
   exit 1
 fi
 
-SSH_KEY_FINGERPRINT=$(ssh-keygen -lf "${SSH_KEY_PATH}.pub" | awk '{print $2}')
+SSH_KEY_FINGERPRINT=$(ssh-keygen -E md5 -lf "${SSH_KEY_PATH}.pub" | awk '{print $2}' | sed 's/^MD5://')
 SSH_KEY_ID=$(doctl compute ssh-key list --format FingerPrint,ID --no-header \
   | awk -v fp="$SSH_KEY_FINGERPRINT" '$1 == fp {print $2}' | head -1 || true)
 
@@ -105,15 +105,12 @@ fi
 CLOUD_INIT_SRC="$SCRIPT_DIR/cloud-init.sh"
 [[ ! -f "$CLOUD_INIT_SRC" ]] && { echo "FEHLER: cloud-init.sh nicht gefunden"; exit 1; }
 
-CLOUD_INIT_TMP=$(mktemp /tmp/cloud-init-XXXXXX.sh)
-# shellcheck disable=SC2064
-trap "rm -f '$CLOUD_INIT_TMP'" EXIT
-
-sed \
+# Platzhalter ersetzen – Inhalt direkt in Variable laden (kein Temp-File nötig)
+CLOUD_INIT_CONTENT=$(sed \
   -e "s|__DIGITALOCEAN_ACCESS_TOKEN__|${DIGITALOCEAN_ACCESS_TOKEN}|g" \
   -e "s|__USER_PASSWORD__|${USER_PASSWORD}|g" \
   -e "s|__DOMAIN__|${DOMAIN}|g" \
-  "$CLOUD_INIT_SRC" > "$CLOUD_INIT_TMP"
+  "$CLOUD_INIT_SRC")
 
 # =============================================================
 # Schritt 6 – Droplet erstellen
@@ -125,7 +122,7 @@ DROPLET_ID=$(doctl compute droplet create "$HOSTNAME" \
   --size "$SIZE" \
   --image "$IMAGE" \
   --ssh-keys "$SSH_KEY_ID" \
-  --user-data-file "$CLOUD_INIT_TMP" \
+  --user-data "$CLOUD_INIT_CONTENT" \
   --wait \
   --format ID \
   --no-header)

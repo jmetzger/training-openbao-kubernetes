@@ -1,0 +1,11 @@
+# Secrets – niemals committen
+.env
+
+# Temporäre cloud-init Dateien
+/tmp/cloud-init-*.sh
+
+# Editor / OS
+.DS_Store
+*.swp
+*.swo
+*~
