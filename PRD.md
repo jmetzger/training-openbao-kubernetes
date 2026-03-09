@@ -441,6 +441,28 @@ echo 'PasswordAuthentication yes' > /etc/ssh/sshd_config.d/10-training.conf
 systemctl restart ssh 2>/dev/null || systemctl restart sshd
 ```
 
+### BUG-005: SSH Passwort-Login schlägt nach BUG-004-Fix weiterhin fehl
+
+**Status:** Offen
+
+**Symptom:**
+```
+11training@openbao.jmetzger.do.t3isp.de: Permission denied (publickey).
+```
+
+Der Fix aus BUG-004 (alle Drop-in-Dateien patchen + `systemctl restart ssh || sshd`) wurde implementiert, aber das Problem tritt auf einem neu deployte Droplet erneut auf.
+
+**Hinweis:**
+Der Nutzername im Fehler ist `11training`, nicht `11trainingdo` (wie in BUG-001/004). Möglicherweise wurde der Nutzername im Skript geändert, aber der User existiert auf dem Server gar nicht, oder `cloud-init` läuft nach dem SSH-Fix und überschreibt die Konfiguration wieder.
+
+**To-Do:**
+- Auf dem laufenden Server prüfen:
+  - `getent passwd 11training` → existiert der User?
+  - `sshd -T | grep passwordauthentication` → ist Passwort-Auth aktiv?
+  - `cat /etc/ssh/sshd_config.d/*.conf` → welche Werte sind gesetzt?
+  - `cloud-init status --long` → lief cloud-init vollständig durch?
+- Ggf. muss der SSH-Restart ans **Ende** von cloud-init verschoben werden (Phase 8), damit cloud-init-Module nicht danach nochmals überschreiben
+
 ---
 
 ## Offene Punkte / Entscheidungen
