@@ -477,6 +477,25 @@ DNS-Propagation war bestätigt (`dig @8.8.8.8` gibt korrekte IP zurück), dennoc
 2. Certbot-Output ins Log: `2>&1 | tee -a "$STATUS_FILE"` – genaue Fehlerursache bei zukünftigen Fehlern sichtbar.
 3. Retry-Versuche von 3 auf 5 erhöht, Pause von 30s auf 60s verlängert.
 
+### BUG-007: Certbot schlägt fehl wegen Let's Encrypt Rate Limit
+
+**Status:** Offen (entsperrt ab 2026-03-10 23:08 UTC)
+
+**Symptom:**
+```
+too many certificates (5) already issued for this exact set of identifiers
+in the last 168h0m0s, retry after 2026-03-10 23:08:21 UTC
+```
+
+**Root Cause:**
+Let's Encrypt erlaubt maximal 5 Zertifikate pro exakter Domain-Kombination innerhalb von 7 Tagen. Durch wiederholte Deployments (Debugging, Neustarts) wurden zu viele Zertifikate für `openbao.jmetzger.do.t3isp.de` ausgestellt. Das ist kein technisches Problem des Skripts, sondern ein operatives Limit.
+
+**Workaround:**
+Warten bis 2026-03-10 23:08 UTC, danach funktioniert Certbot wieder.
+
+**Langfristige Lösung:**
+Während der Entwicklung/Testphase Certbot mit `--staging` Flag ausführen (kein echtes Zertifikat, aber kein Rate Limit). Erst für den finalen Produktivlauf ohne `--staging`.
+
 ---
 
 ## Offene Punkte / Entscheidungen
