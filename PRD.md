@@ -1,6 +1,6 @@
 # PRD: OpenBao Single-Node Deployment auf DigitalOcean
 
-**Status: IN BEARBEITUNG**
+**Status: ABGESCHLOSSEN**
 
 ## Ziel
 
@@ -138,9 +138,10 @@ Das Script läuft als `user-data` auf dem Droplet und schreibt seinen Fortschrit
 - nginx starten und aktivieren
 
 **Phase 5 – Let's Encrypt Zertifikat**
-- Certbot via `certbot --nginx` für `openbao.<USER>.do.t3isp.de`
+- Certbot via `certbot --nginx` für `openbao.<USER>.do.t3isp.de` – **mit Retry-Logik (3 Versuche, 30s Pause)**
 - Zertifikat validieren: `/etc/letsencrypt/live/<DOMAIN>/fullchain.pem` muss existieren
 - Automatische Erneuerung via systemd-Timer (`certbot.timer` ist nach certbot-Installation aktiv)
+- Hintergrund: Let's Encrypt Multi-Perspective Validation kann mit einem DigitalOcean-internen Validator scheitern (siehe BUG-002)
 
 **Phase 6 – nginx HTTPS-Konfiguration**
 - nginx.conf mit HTTPS-Block aktualisieren:
@@ -340,6 +341,45 @@ systemctl restart sshd
 - Nutzer `11trainingdo` existiert (uid=1000) ✓
 - Password-Hash gesetzt (`chpasswd 11trainingdo:${USER_PASSWORD}`) ✓
 - SSH bietet `publickey,password` als Auth-Methoden an ✓
+
+### BUG-002: Certbot scheitert – Let's Encrypt Multi-Perspective Validation
+
+**Status:** ✓ Behoben (2026-03-09)
+
+**Symptom:**
+```
+[FEHLER]: Certbot fehlgeschlagen
+Detail: During secondary validation: 165.227.175.75: Fetching
+http://openbao.jmetzger.do.t3isp.de/.well-known/acme-challenge/...: Connection refused
+```
+
+**Root Cause:**
+Let's Encrypt verwendet seit 2024 Multi-Perspective Validation: der Challenge wird von mehreren Standorten aus geprüft. Einer der Validatoren (`165.227.175.75`) liegt innerhalb des DigitalOcean-Netzwerks (fra1). Dieser kann den Droplet über seine öffentliche IP nicht erreichen (hairpin NAT / interne Netzwerkpolitik von DigitalOcean). Die anderen Validatoren (`23.178.112.213`, `34.209.40.2`) kommen erfolgreich durch. Da alle Validatoren zustimmen müssen, schlägt der gesamte Certbot-Lauf fehl.
+
+Wichtig: Port 80 war offen und nginx lief korrekt – das Problem liegt ausschließlich am DigitalOcean-internen Routing. Ein zweiter Versuch wenig später gelingt, weil Let's Encrypt unterschiedliche sekundäre Validator-IPs einsetzt.
+
+**Fix in `cloud-init.sh`:**
+
+Phase 5 erhält eine Retry-Schleife (3 Versuche, 30s Pause):
+
+```bash
+# Phase 5 – Let's Encrypt mit Retry
+for attempt in 1 2 3; do
+  certbot --nginx \
+    --non-interactive \
+    --agree-tos \
+    --email "$EMAIL" \
+    --no-eff-email \
+    -d "$DOMAIN" && break
+  log "Certbot Versuch $attempt fehlgeschlagen – warte 30s..."
+  sleep 30
+done
+[[ -f "/etc/letsencrypt/live/${DOMAIN}/fullchain.pem" ]] \
+  || fail "Certbot nach 3 Versuchen fehlgeschlagen"
+```
+
+**Laufender Server (openbao.jmetzger.do.t3isp.de, 139.59.131.231):**
+Certbot wurde manuell erneut ausgeführt (erfolgreich). Phase 6 nginx-Config wurde manuell angewendet. Server läuft vollständig.
 
 ---
 

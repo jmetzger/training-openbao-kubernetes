@@ -18,6 +18,9 @@
   - Laufzeit cloud-init: ca. 50 Sekunden (Phase 1 bis Phase 7)
   - Ergebnis: ✓ DNS Resolution, ✓ HTTP→HTTPS Redirect, ✓ HTTPS erreichbar, ✓ SSL gültig, ✓ nginx aktiv
 
+- [x] BUG-002 dokumentiert: Certbot Multi-Perspective Validation – Retry-Logik in cloud-init.sh, Bugbeschreibung in PRD.md
+- [x] PRD.md Status auf ABGESCHLOSSEN gesetzt
+
 ## Ausstehend
 
-- [ ] Droplet nach Training-Tag löschen (Kosten sparen)
+- [ ] Droplet nach Training-Tag löschen (Kosten sparen – manuell, nach Training)
