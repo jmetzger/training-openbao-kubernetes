@@ -493,8 +493,12 @@ Let's Encrypt erlaubt maximal 5 Zertifikate pro exakter Domain-Kombination inner
 **Workaround:**
 Warten bis 2026-03-10 23:08 UTC, danach funktioniert Certbot wieder.
 
-**Langfristige Lösung:**
-Während der Entwicklung/Testphase Certbot mit `--staging` Flag ausführen (kein echtes Zertifikat, aber kein Rate Limit). Erst für den finalen Produktivlauf ohne `--staging`.
+**Implementierte Lösung (2026-03-09):**
+`CERTBOT_STAGING=1` in `.env` aktiviert Let's Encrypt Staging CA:
+- Kein Rate Limit während der Entwicklung
+- Zertifikat wird ausgestellt (nicht browser-trusted, aber funktional)
+- `install-openbao-single.sh` passt Tests 3+4 automatisch an (curl `-k` für Staging)
+- Für Produktivbetrieb: `CERTBOT_STAGING` weglassen oder auf `0` setzen
 
 ---
 

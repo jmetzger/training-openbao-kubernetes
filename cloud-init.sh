@@ -11,6 +11,7 @@ export HOME=/root
 DIGITALOCEAN_ACCESS_TOKEN="__DIGITALOCEAN_ACCESS_TOKEN__"
 USER_PASSWORD="__USER_PASSWORD__"
 DOMAIN="__DOMAIN__"
+CERTBOT_STAGING="__CERTBOT_STAGING__"
 
 # --- Konstanten ---
 BASE_DOMAIN="do.t3isp.de"
@@ -204,14 +205,23 @@ if [[ "$NGINX_HTTP_CODE" == "000" ]]; then
 fi
 
 # BUG-002/BUG-006: Retry-Schleife (5 Versuche, 60s Pause) + vollständiges Logging
+# BUG-007: Staging-Mode via CERTBOT_STAGING=true (kein Rate Limit, aber kein vertrauenswürdiges Zertifikat)
+STAGING_FLAG=""
+if [[ "$CERTBOT_STAGING" == "true" ]]; then
+  STAGING_FLAG="--staging"
+  log "STAGING-MODE: Certbot verwendet Let's Encrypt Staging CA (kein Rate Limit, aber kein vertrauenswürdiges Zertifikat)"
+fi
+
 CERTBOT_OK=false
 for attempt in 1 2 3 4 5; do
   log "Certbot Versuch $attempt/5..."
+  # shellcheck disable=SC2086
   if certbot --nginx \
     --non-interactive \
     --agree-tos \
     --email "$EMAIL" \
     --no-eff-email \
+    $STAGING_FLAG \
     -d "$DOMAIN" 2>&1 | tee -a "$STATUS_FILE"; then
     CERTBOT_OK=true
     break

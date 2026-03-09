@@ -111,10 +111,15 @@ fi
 CLOUD_INIT_SRC="$SCRIPT_DIR/cloud-init.sh"
 [[ ! -f "$CLOUD_INIT_SRC" ]] && { echo "FEHLER: cloud-init.sh nicht gefunden"; exit 1; }
 
+# CERTBOT_STAGING=1 in .env → Staging-CA verwenden (kein Rate Limit, aber kein vertrauenswürdiges Zertifikat)
+CERTBOT_STAGING_VALUE="false"
+[[ "${CERTBOT_STAGING:-0}" == "1" ]] && CERTBOT_STAGING_VALUE="true"
+
 CLOUD_INIT_CONTENT=$(sed \
   -e "s|__DIGITALOCEAN_ACCESS_TOKEN__|${DIGITALOCEAN_ACCESS_TOKEN}|g" \
   -e "s|__USER_PASSWORD__|${USER_PASSWORD}|g" \
   -e "s|__DOMAIN__|${DOMAIN}|g" \
+  -e "s|__CERTBOT_STAGING__|${CERTBOT_STAGING_VALUE}|g" \
   "$CLOUD_INIT_SRC")
 
 # =============================================================
@@ -205,7 +210,12 @@ fi
 # =============================================================
 echo ""
 echo "=== Tests ==="
+[[ "$CERTBOT_STAGING_VALUE" == "true" ]] && echo "  (STAGING-MODE: SSL-Tests mit -k da Staging-CA nicht vertrauenswürdig)"
 ERRORS=0
+
+# curl SSL-Flag: in Staging-Mode -k verwenden (Staging-CA nicht vertrauenswürdig)
+SSL_FLAGS=""
+[[ "$CERTBOT_STAGING_VALUE" == "true" ]] && SSL_FLAGS="-k"
 
 # Test 1: DNS Resolution
 echo -n "[1] DNS Resolution... "
@@ -230,8 +240,9 @@ fi
 
 # Test 3: HTTPS erreichbar
 echo -n "[3] HTTPS erreichbar... "
+# shellcheck disable=SC2086
 HTTPS_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
-  --max-time 10 "https://${DOMAIN}/" 2>/dev/null || true)
+  --max-time 10 $SSL_FLAGS "https://${DOMAIN}/" 2>/dev/null || true)
 if [[ "$HTTPS_CODE" =~ ^[23] ]]; then
   echo "OK (HTTP $HTTPS_CODE)"
 else
@@ -239,15 +250,29 @@ else
   ERRORS=$((ERRORS + 1))
 fi
 
-# Test 4: SSL Zertifikat gültig (curl ohne -k)
-echo -n "[4] SSL Zertifikat gültig... "
-SSL_RESULT=$(curl -s -o /dev/null -w "%{http_code}" \
-  --max-time 10 "https://${DOMAIN}/" 2>/dev/null || echo "FEHLER")
-if [[ "$SSL_RESULT" != "FEHLER" && "$SSL_RESULT" != "000" ]]; then
-  echo "OK"
+# Test 4: SSL Zertifikat gültig (ohne -k bei Produktion, mit -k bei Staging)
+echo -n "[4] SSL Zertifikat... "
+if [[ "$CERTBOT_STAGING_VALUE" == "true" ]]; then
+  # Staging: Zertifikat vorhanden prüfen (via SSH), aber nicht browser-trusted
+  CERT_EXISTS=$(ssh -i "$SSH_KEY_PATH" -o StrictHostKeyChecking=no \
+    root@"$DROPLET_IP" \
+    "[[ -f /etc/letsencrypt/live/${DOMAIN}/fullchain.pem ]] && echo yes || echo no" 2>/dev/null || echo "no")
+  if [[ "$CERT_EXISTS" == "yes" ]]; then
+    echo "OK (Staging-Zertifikat vorhanden – nicht browser-trusted)"
+  else
+    echo "FEHLER (Zertifikat nicht gefunden)"
+    ERRORS=$((ERRORS + 1))
+  fi
 else
-  echo "FEHLER (SSL-Zertifikat ungültig oder nicht erreichbar)"
-  ERRORS=$((ERRORS + 1))
+  # Produktion: curl ohne -k – vertrauenswürdiges Zertifikat prüfen
+  SSL_RESULT=$(curl -s -o /dev/null -w "%{http_code}" \
+    --max-time 10 "https://${DOMAIN}/" 2>/dev/null || echo "FEHLER")
+  if [[ "$SSL_RESULT" != "FEHLER" && "$SSL_RESULT" != "000" ]]; then
+    echo "OK (vertrauenswürdiges Zertifikat)"
+  else
+    echo "FEHLER (SSL-Zertifikat ungültig oder nicht erreichbar)"
+    ERRORS=$((ERRORS + 1))
+  fi
 fi
 
 # Test 5: nginx läuft
