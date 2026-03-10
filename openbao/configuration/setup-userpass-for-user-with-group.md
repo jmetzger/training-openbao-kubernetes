@@ -174,14 +174,31 @@ bao token capabilities secret/data/test
 bao read identity/group/name/admins
 ```
 
-## Optional: Self-Service Passwortwechsel erlauben
+## Optional: Darf ich Passwörter ändern ? 
+
+```
+bao token capabilities auth/userpass/users/*/password
+```
+
+  * So ändere ich meine eigenes Passwort
+
+```
+bao write auth/userpass/users/jochen/password password="neuesPasswort"
+```
+
+  * So teste ich, ob es funktioniert
+
+```
+bao write auth/userpass/users/jochen/password password="neuesPasswort"
+```
+
 
 ### Step 1: token revoken und als root anmelden 
 
-
-
-
-Policy für den User, um das eigene Passwort zu ändern:
+```
+# root-token eingeben 
+bao login
+```
 
 ```
 cd
