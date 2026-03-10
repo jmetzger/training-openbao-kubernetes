@@ -95,7 +95,7 @@ kubectl get pods -n vault-secrets-operator-system
 ```
 
 
-## Schritt 4: Kubernetes Auth Method aktivieren und konfigurieren
+## Schritt 5: Kubernetes Auth Method aktivieren und konfigurieren
 
 ### Auth Method aktivieren
 
