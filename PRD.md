@@ -638,9 +638,38 @@ fi
 
 Phase 4: Zusätzlicher Sicherheitscheck `command -v nginx` mit präziser Fehlermeldung "nginx binary nicht gefunden".
 
-### BUG-010: doctl API Token ungültig in cloud-init – `[FAILED]` in Phase 0
+### BUG-011: doctl API Token ungültig – tatsächliche Ursache: falscher Token in `.env`
 
 **Status:** ✓ Behoben (2026-03-10)
+
+**Symptom:**
+```
+[2026-03-10 06:38:56] FEHLER: doctl API Token ungültig
+[FAILED]
+Droplet bleibt für manuelle Analyse erhalten (ID: 557171721, IP: 164.92.167.50)
+```
+
+**Root Cause (manuell analysiert auf 164.92.167.50):**
+Fehldiagnose in BUG-010 – das `sed`-Escaping war nicht das Problem. Der Token wurde korrekt (unverändert, 76 Zeichen) in `cloud-init.sh` eingesetzt, wie in `/var/lib/cloud/instance/user-data.txt` verifiziert. Der Token selbst war jedoch ungültig (abgelaufen oder falsch kopiert).
+
+Nachweis durch direkten Vergleich:
+| Quelle | Token-Länge | API-Test (`curl https://api.digitalocean.com/v2/account`) |
+|---|---|---|
+| `~/.config/doctl/config.yaml` (lokal) | 71 Zeichen | HTTP 200 – gültig |
+| `.env` | 76 Zeichen | HTTP 401 – ungültig |
+
+`doctl account get` lokal schien zu funktionieren, weil `doctl` den gespeicherten Token aus `config.yaml` nutzte – nicht den aus `.env`. Die Scripts verwenden aber den `.env`-Token.
+
+**Fix:**
+`.env` mit dem gültigen Token aus `~/.config/doctl/config.yaml` aktualisiert.
+
+**Nebenbefund:** Fehlermeldung `ungÃ¼ltig` statt `ungültig` – UTF-8-Kodierungsproblem bei der Log-Ausgabe. Kein Einfluss auf die Funktion.
+
+---
+
+### BUG-010: doctl API Token ungültig in cloud-init – `[FAILED]` in Phase 0
+
+**Status:** Fehldiagnose – siehe BUG-011
 
 **Symptom:**
 ```
@@ -649,22 +678,10 @@ Phase 4: Zusätzlicher Sicherheitscheck `command -v nginx` mit präziser Fehlerm
 Droplet bleibt für manuelle Analyse erhalten (ID: 557170314, IP: 161.35.192.94)
 ```
 
-**Root Cause (Verdacht):**
-`DIGITALOCEAN_ACCESS_TOKEN` wird in `cloud-init.sh` per `sed` eingesetzt (`install-openbao-single.sh` Zeile 186). Mögliche Ursachen:
-- Token enthält Sonderzeichen, die `sed` als Trennzeichen oder Regex interpretiert → Token wird verstümmelt eingesetzt
-- `sed`-Delimiter `/` kommt im Token vor → `sed` bricht ab oder ersetzt falsch
-- Token wurde in `.env` mit Anführungszeichen oder Leerzeichen eingetragen und beim Einlesen falsch geparst
+**Vermutete Root Cause (nicht bestätigt):**
+`sed`-Escaping beim Token-Einsetzen könnte den Token verstümmeln. Diese Vermutung wurde nicht verifiziert – tatsächliche Ursache war ein ungültiger Token in `.env` (siehe BUG-011).
 
-**Fix in `install-openbao-single.sh` Schritt 6:**
-
-```bash
-# Sicheres Escaping für sed-Replacement (Delimiter |, escaped: \ & |)
-sed_escape() { printf '%s' "$1" | sed 's/[\\&|]/\\&/g'; }
-TOKEN_ESC=$(sed_escape "$DIGITALOCEAN_ACCESS_TOKEN")
-PASSWORD_ESC=$(sed_escape "$USER_PASSWORD")
-```
-
-**Fix in `cloud-init.sh` Phase 0:**
+**Dokumentierter Fix (bereits im Script implementiert, aber nicht ursächlich):**
 
 Zusätzliche Checks:
 - Länge ≥ 20 Zeichen (Token verstümmelt → sofort Fehler mit Längenangabe)
