@@ -103,7 +103,7 @@ OpenBao v2.5.1 (...)
 
 ---
 
-## Schritt 3: OpenBao konfigurieren
+## Schritt 3: OpenBao konfigurieren & Firewall freischalten
 
 OpenBao lauscht nur auf `127.0.0.1` – TLS wird von nginx uebernommen.
 
@@ -111,20 +111,29 @@ OpenBao lauscht nur auf `127.0.0.1` – TLS wird von nginx uebernommen.
 sudo tee /etc/openbao/openbao.hcl > /dev/null <<'EOF'
 ui = true
 
-storage "file" {
-  path = "/opt/openbao/data"
+storage "raft" {
+  path    = "/opt/openbao/data"
+  node_id = "node1"
 }
 
 listener "tcp" {
   address     = "127.0.0.1:8200"
+  cluster_address = "10.135.0.5:8201"
   tls_disable = 1
 }
 
-api_addr = "https://openbao.<DEIN-NAME>.do.t3isp.de"
+api_addr = "https://openbao.tn1.do.t3isp.de:8200"
+# Achtung: Hier Deine private IP eintragen
+# Abfrage mit ip a show eth1 (digitalocean)
+cluster_addr = "https://10.135.0.5:8201"
 EOF
 ```
 
 > `api_addr` auf die eigene Domain anpassen – sie wird fuer UI-Redirects und CLI-Ausgaben benoetigt.
+
+# Achtung: Der Port muss in der Firewall geöffnet werden
+ufw allow from 10.135.0.0/24 to 10.135.0.5 port 8201 proto tcp
+
 
 ---
 
