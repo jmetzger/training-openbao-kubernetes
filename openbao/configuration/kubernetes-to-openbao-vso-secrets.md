@@ -25,6 +25,8 @@ sudo mv bao /usr/local/bin/
 ## Schritt 1: KV Secrets Engine aktivieren
 
 ```bash
+# Kann auch in die ~/.bashrc 
+export BAO_ADDR=https://openbao.tn<deine-tn-nr>.do.t3isp.de 
 bao login -method=userpass username=<dein-user>
 bao secrets enable -path=secret kv-v2
 ```
