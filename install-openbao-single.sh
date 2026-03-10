@@ -186,9 +186,14 @@ CLOUD_INIT_SRC="$SCRIPT_DIR/cloud-init.sh"
 CERTBOT_STAGING_VALUE="false"
 [[ "${CERTBOT_STAGING:-0}" == "1" ]] && CERTBOT_STAGING_VALUE="true"
 
+# Sicheres Escaping für sed-Replacement (Delimiter |, escaped: \ & |)
+sed_escape() { printf '%s' "$1" | sed 's/[\\&|]/\\&/g'; }
+TOKEN_ESC=$(sed_escape "$DIGITALOCEAN_ACCESS_TOKEN")
+PASSWORD_ESC=$(sed_escape "$USER_PASSWORD")
+
 CLOUD_INIT_CONTENT=$(sed \
-  -e "s|__DIGITALOCEAN_ACCESS_TOKEN__|${DIGITALOCEAN_ACCESS_TOKEN}|g" \
-  -e "s|__USER_PASSWORD__|${USER_PASSWORD}|g" \
+  -e "s|__DIGITALOCEAN_ACCESS_TOKEN__|${TOKEN_ESC}|g" \
+  -e "s|__USER_PASSWORD__|${PASSWORD_ESC}|g" \
   -e "s|__DOMAIN__|${DOMAIN}|g" \
   -e "s|__CERTBOT_STAGING__|${CERTBOT_STAGING_VALUE}|g" \
   -e "s|__TRAINING_USER__|${TRAINING_USER}|g" \

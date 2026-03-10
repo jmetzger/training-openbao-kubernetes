@@ -638,6 +638,41 @@ fi
 
 Phase 4: Zusätzlicher Sicherheitscheck `command -v nginx` mit präziser Fehlermeldung "nginx binary nicht gefunden".
 
+### BUG-010: doctl API Token ungültig in cloud-init – `[FAILED]` in Phase 0
+
+**Status:** ✓ Behoben (2026-03-10)
+
+**Symptom:**
+```
+[2026-03-10 06:28:45] FEHLER: doctl API Token ungültig
+[FAILED]
+Droplet bleibt für manuelle Analyse erhalten (ID: 557170314, IP: 161.35.192.94)
+```
+
+**Root Cause (Verdacht):**
+`DIGITALOCEAN_ACCESS_TOKEN` wird in `cloud-init.sh` per `sed` eingesetzt (`install-openbao-single.sh` Zeile 186). Mögliche Ursachen:
+- Token enthält Sonderzeichen, die `sed` als Trennzeichen oder Regex interpretiert → Token wird verstümmelt eingesetzt
+- `sed`-Delimiter `/` kommt im Token vor → `sed` bricht ab oder ersetzt falsch
+- Token wurde in `.env` mit Anführungszeichen oder Leerzeichen eingetragen und beim Einlesen falsch geparst
+
+**Fix in `install-openbao-single.sh` Schritt 6:**
+
+```bash
+# Sicheres Escaping für sed-Replacement (Delimiter |, escaped: \ & |)
+sed_escape() { printf '%s' "$1" | sed 's/[\\&|]/\\&/g'; }
+TOKEN_ESC=$(sed_escape "$DIGITALOCEAN_ACCESS_TOKEN")
+PASSWORD_ESC=$(sed_escape "$USER_PASSWORD")
+```
+
+**Fix in `cloud-init.sh` Phase 0:**
+
+Zusätzliche Checks:
+- Länge ≥ 20 Zeichen (Token verstümmelt → sofort Fehler mit Längenangabe)
+- Prefix `dop_v1_` prüfen (ersten 10 Zeichen im Fehlerlog sichtbar)
+- Fehlermeldungen präziser formuliert
+
+---
+
 ### BUG-009: Name-Argument in install/destroy nicht implementiert – DNS-Löschung noch aktiv
 
 **Status:** ✓ Behoben (2026-03-10)

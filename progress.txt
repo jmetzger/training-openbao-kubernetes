@@ -75,6 +75,10 @@
   - PRD.md BUG-008 Status: Offen → behoben
 
 - [x] BUG-009 behoben: Name-Argument in install/destroy implementiert + DNS-Löschung entfernt
+
+- [x] BUG-010 behoben: sed-Delimiter-Problem bei Token-Einsetzen + präzisere Phase-0-Validierung
+  - install-openbao-single.sh: sed_escape()-Funktion zum sicheren Escaping von Token + Passwort (schützt vor | in Werten)
+  - cloud-init.sh Phase 0: Längencheck (< 20 Zeichen → Fehler), Prefix-Check (dop_v1_), präzisere Fehlermeldungen
   - install-openbao-single.sh: Vor Multi-Server-Block neuer Name-Modus (^[a-z]): setzt DEPLOY_USER + TRAINING_USER_OVERRIDE
     → `./install-openbao-single.sh alice` deployt Server mit Domain openbao.alice.do.t3isp.de
   - destroy-openbao-single.sh: Neuer elif-Zweig (^[a-z]) vor else → TARGET_NAMES=("openbao-${ARG}")

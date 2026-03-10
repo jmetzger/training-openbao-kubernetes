@@ -36,9 +36,11 @@ fail() {
 # =============================================================
 log "=== Phase 0: Pre-Flight Checks ==="
 
-[[ "$DIGITALOCEAN_ACCESS_TOKEN" == __*__ ]] && fail "DIGITALOCEAN_ACCESS_TOKEN nicht ersetzt"
+[[ "$DIGITALOCEAN_ACCESS_TOKEN" == __*__ ]] && fail "DIGITALOCEAN_ACCESS_TOKEN nicht ersetzt (Platzhalter noch vorhanden)"
 [[ -z "$DIGITALOCEAN_ACCESS_TOKEN" ]] && fail "DIGITALOCEAN_ACCESS_TOKEN leer"
-[[ "$USER_PASSWORD" == __*__ ]] && fail "USER_PASSWORD nicht ersetzt"
+[[ "${#DIGITALOCEAN_ACCESS_TOKEN}" -lt 20 ]] && fail "DIGITALOCEAN_ACCESS_TOKEN zu kurz (${#DIGITALOCEAN_ACCESS_TOKEN} Zeichen) – Token verstümmelt?"
+[[ "$DIGITALOCEAN_ACCESS_TOKEN" != dop_v1_* ]] && fail "DIGITALOCEAN_ACCESS_TOKEN hat ungültiges Format (erwartet: dop_v1_..., erhalten: ${DIGITALOCEAN_ACCESS_TOKEN:0:10}...)"
+[[ "$USER_PASSWORD" == __*__ ]] && fail "USER_PASSWORD nicht ersetzt (Platzhalter noch vorhanden)"
 [[ -z "$USER_PASSWORD" ]] && fail "USER_PASSWORD leer"
 [[ "$EUID" -ne 0 ]] && fail "Muss als root ausgeführt werden"
 
