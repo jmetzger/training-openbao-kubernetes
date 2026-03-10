@@ -24,5 +24,13 @@ Es ist im Grunde ein **interner Router**: Pfad → Engine → Antwort.
 
 
 
-## Was sind secret engines 
+## Was sind secret engines ?
+
+   * Secrets Engines sind in OpenBao nicht nur für "echte" Secrets da – es sind allgemein Backends, die an einem Pfad gemountet sind und auf API-Anfragen antworten.
+
+```
+Kurz: "Secrets Engine" ist der architektonische Baustein für alles in OpenBao. Wer am Pfad-Router hängt, ist eine Engine – egal ob sie Passwörter generiert, Zertifikate ausstellt oder Groups verwaltet.
+```
+
+
 
