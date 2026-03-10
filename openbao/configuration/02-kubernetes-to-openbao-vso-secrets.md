@@ -187,6 +187,10 @@ bao write auth/kubernetes/role/mariadb \
 
 ## Schritt 6: ServiceAccount für MariaDB anlegen
 
+```
+nano mariadb-sa.yaml
+```
+
 ```yaml
 # mariadb-sa.yaml
 apiVersion: v1
