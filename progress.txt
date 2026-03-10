@@ -74,6 +74,15 @@
   - Phase 4: zusätzlicher Sicherheitscheck `command -v nginx` mit präziser Fehlermeldung "nginx binary nicht gefunden"
   - PRD.md BUG-008 Status: Offen → behoben
 
+- [x] BUG-009 behoben: Name-Argument in install/destroy implementiert + DNS-Löschung entfernt
+  - install-openbao-single.sh: Vor Multi-Server-Block neuer Name-Modus (^[a-z]): setzt DEPLOY_USER + TRAINING_USER_OVERRIDE
+    → `./install-openbao-single.sh alice` deployt Server mit Domain openbao.alice.do.t3isp.de
+  - destroy-openbao-single.sh: Neuer elif-Zweig (^[a-z]) vor else → TARGET_NAMES=("openbao-${ARG}")
+    → `./destroy-openbao-single.sh alice` löscht openbao-alice
+  - DNS-Löschung aus delete_one() entfernt (laut PRD: DNS-Records bleiben erhalten)
+  - Header-Kommentar aktualisiert (neuer alice-Modus dokumentiert, DNS-Info entfernt)
+  - Übersichtsausgabe bereinigt: "Droplet gelöscht" ohne DNS-Status
+
 ## Ausstehend
 
 - [ ] BUG-006 im echten Deployment verifizieren (Agentic Loop mit CERTBOT_STAGING=1)

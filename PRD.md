@@ -638,6 +638,48 @@ fi
 
 Phase 4: Zusätzlicher Sicherheitscheck `command -v nginx` mit präziser Fehlermeldung "nginx binary nicht gefunden".
 
+### BUG-009: Name-Argument in install/destroy nicht implementiert – DNS-Löschung noch aktiv
+
+**Status:** ✓ Behoben (2026-03-10)
+
+**Symptom:**
+```bash
+./install-openbao-single.sh alice   # deployt Server für $USER statt für alice
+./destroy-openbao-single.sh alice   # löscht openbao-$USER statt openbao-alice
+```
+
+**Root Cause:**
+
+`install-openbao-single.sh` (Zeile 29):
+```bash
+if [[ -n "${1:-}" && "${1:-}" =~ ^[0-9]+$ ]]; then
+```
+Nur Zahlen triggern den Multi-Server-Modus. Ein Name wie `alice` fällt durch in den normalen Single-Deploy mit `$USER` – er wird nicht als `TRAINING_USER` / Subdomain verwendet.
+
+`destroy-openbao-single.sh` (Zeilen 60–68):
+```bash
+elif [[ "$ARG" =~ ^[0-9]+$ ]]; then
+  # tln1 … tln<N>
+else
+  # Standard: openbao-$USER
+  DROPLET_USER="${USER:-$(whoami)}"
+  TARGET_NAMES=("openbao-${DROPLET_USER}")
+fi
+```
+Ein Name wie `alice` landet im `else`-Zweig und wird ignoriert – `openbao-alice` wird nicht als Ziel gesetzt.
+
+Zusätzlich löscht das Destroy-Script noch DNS-Records (Kommentar Zeile 5–7 und Loop) – laut PRD nicht mehr gewünscht.
+
+**To-Do:**
+
+`install-openbao-single.sh`:
+- Argument-Erkennung erweitern: beginnt `$1` mit `a-z` → als `TRAINING_USER_OVERRIDE` und Subdomain verwenden (1 Server deployen)
+
+`destroy-openbao-single.sh`:
+- Neuen Zweig vor `else` einfügen: `[[ "$ARG" =~ ^[a-z] ]]` → `TARGET_NAMES=("openbao-${ARG}")`
+- DNS-Löschung aus dem Loop entfernen
+- Kommentar in Zeile 5–7 aktualisieren
+
 ---
 
 ## Offene Punkte / Entscheidungen

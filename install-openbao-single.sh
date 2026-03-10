@@ -24,6 +24,14 @@ source "$SCRIPT_DIR/.env"
   && { echo "FEHLER: USER_PASSWORD nicht gesetzt (siehe .env)"; exit 1; }
 
 # =============================================================
+# Name-Modus (wenn $1 mit Buchstaben a-z beginnt → direkter Name als Subdomain/Nutzer)
+# =============================================================
+if [[ -n "${1:-}" && "${1:-}" =~ ^[a-z] ]]; then
+  export DEPLOY_USER="$1"
+  export TRAINING_USER_OVERRIDE="$1"
+fi
+
+# =============================================================
 # Multi-Server-Modus (wenn $1 eine Zahl ist)
 # =============================================================
 if [[ -n "${1:-}" && "${1:-}" =~ ^[0-9]+$ ]]; then

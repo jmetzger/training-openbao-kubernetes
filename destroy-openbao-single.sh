@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
-# destroy-openbao-single.sh – Löscht Droplets und DNS-Records für OpenBao Training
+# destroy-openbao-single.sh – Löscht Droplets für OpenBao Training (DNS-Records bleiben erhalten)
 #
 # Aufruf:
-#   ./destroy-openbao-single.sh           # löscht openbao-$USER + DNS-Record
-#   ./destroy-openbao-single.sh 5         # löscht openbao-tln1 … openbao-tln5 + alle DNS-Records
-#   ./destroy-openbao-single.sh all       # löscht ALLE Droplets mit Prefix "openbao-" + alle DNS-Records
+#   ./destroy-openbao-single.sh           # löscht openbao-$USER
+#   ./destroy-openbao-single.sh 5         # löscht openbao-tln1 … openbao-tln5
+#   ./destroy-openbao-single.sh alice     # löscht openbao-alice (Name beginnt mit a-z → kein Zähler)
+#   ./destroy-openbao-single.sh all       # löscht ALLE Droplets mit Prefix "openbao-"
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -62,6 +63,9 @@ elif [[ "$ARG" =~ ^[0-9]+$ ]]; then
   for i in $(seq 1 "$ARG"); do
     TARGET_NAMES+=("openbao-tln${i}")
   done
+elif [[ "$ARG" =~ ^[a-z] ]]; then
+  # Direkter Name (z.B. alice → openbao-alice)
+  TARGET_NAMES=("openbao-${ARG}")
 else
   # Standard: openbao-$USER
   DROPLET_USER="${USER:-$(whoami)}"
@@ -93,7 +97,6 @@ declare -A DELETE_STATUS
 delete_one() {
   local droplet_name="$1"
   local user_label="${droplet_name#openbao-}"
-  local domain="openbao.${user_label}.${BASE_DOMAIN}"
   local result_file="/tmp/destroy-${user_label}.result"
 
   # Droplet suchen
@@ -116,22 +119,7 @@ delete_one() {
     errors=$((errors + 1))
   fi
 
-  # DNS-Record suchen und löschen
-  local record_id
-  record_id=$(doctl compute domain records list "$BASE_DOMAIN" \
-    --format Name,ID --no-header \
-    | awk -v d="openbao.${user_label}" '$1 == d {print $2}' | head -1 || true)
-
-  if [[ -n "$record_id" ]]; then
-    if doctl compute domain records delete "$BASE_DOMAIN" "$record_id" --force 2>/dev/null; then
-      echo "dns_ok" >> "$result_file"
-    else
-      echo "dns_err" >> "$result_file"
-      errors=$((errors + 1))
-    fi
-  else
-    echo "dns_not_found" >> "$result_file"
-  fi
+  # DNS-Records werden NICHT gelöscht (laut PRD)
 
   if [[ $errors -eq 0 ]]; then
     echo "SUCCESS" >> "$result_file"
@@ -141,7 +129,7 @@ delete_one() {
 }
 
 echo ""
-echo "Lösche Droplets und DNS-Records..."
+echo "Lösche Droplets..."
 
 # Temporäre Result-Dateien leeren
 for name in "${TARGET_NAMES[@]}"; do
@@ -185,11 +173,7 @@ for name in "${TARGET_NAMES[@]}"; do
   if echo "$status" | grep -q "NOT_FOUND"; then
     echo "  $user_label  ✗  Droplet nicht gefunden (bereits gelöscht?)"
   elif echo "$status" | grep -q "SUCCESS"; then
-    if echo "$status" | grep -q "dns_not_found"; then
-      echo "  $user_label  ✓  Droplet gelöscht, kein DNS-Record gefunden"
-    else
-      echo "  $user_label  ✓  Droplet gelöscht, DNS-Record entfernt"
-    fi
+    echo "  $user_label  ✓  Droplet gelöscht"
   else
     echo "  $user_label  ✗  Fehler beim Löschen – Logs: /tmp/destroy-${user_label}.result"
     OVERALL_EXIT=1
