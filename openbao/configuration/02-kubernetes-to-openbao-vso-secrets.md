@@ -259,9 +259,13 @@ kubectl describe secretstore openbao-backend
 
 Das ExternalSecret definiert, welches Secret aus OpenBao geholt und wie das resultierende Kubernetes Secret aussehen soll.
 
+```
+nano external-secret.yaml
+```
+
 ```yaml
 # external-secret.yaml
-apiVersion: external-secrets.io/v1beta1
+apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
   name: mariadb-secret
