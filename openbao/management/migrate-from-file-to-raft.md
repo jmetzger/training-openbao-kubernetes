@@ -9,7 +9,7 @@
 ## Schritt 1: Aktuelle Config prüfen
 
 ```bash
-cat /etc/openbao/config.hcl | grep -A5 storage
+cat /etc/openbao/openbao.hcl | grep -A5 storage
 ```
 
 Erwartete Ausgabe (Beispiel):
