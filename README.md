@@ -10,13 +10,14 @@
      * [Architektur-Überblick](openbao/overview.md)
      * [Was ist OpenBao?](openbao/what-is-openbao.md)
      * [Was sind secret-engines?](openbao/secret-engines.md)
+
+  1. OpenBao Installation
+     * [Standalone – .deb-Paket hinter nginx Reverse Proxy](openbao/installation/standalone.md)
     
   1. OpenBao Konfiguration
      * [User für Passwort-Authentifizierung als Admin-Nutzer in Gruppe aufsetzen](openbao/configuration/setup-userpass-for-user-with-group.md)
-
-  3. Installation
-     * [Standalone – .deb-Paket hinter nginx Reverse Proxy](openbao/installation/standalone.md)
-    
+     * [MariaDB Deployment mit OpenBao & Vault Secrets Operator (VSO)](openbao/configuration/kubernetes-to-openbao-vso-secrets.md)
+   
 ## Backlog 
 
   1. OpenBao Grundlagen 
