@@ -129,7 +129,7 @@ bao write identity/entity-alias \
 bao write identity/group \
     name="admins" \
     policies="admin-policy" \
-    member_entity_ids="<ENTITY_ID>"
+    member_entity_ids="<ENTITY_ID>" # <- aus 7. 
 ```
 
 Mehrere User kommasepariert: `member_entity_ids="id1,id2,id3"`
@@ -137,14 +137,16 @@ Mehrere User kommasepariert: `member_entity_ids="id1,id2,id3"`
 ## 10. Login testen
 
 ```bash
-bao login -method=userpass \
-    username=jochen \
-    password="$TEMP_PW"
+bao login -method=userpass username=jochen
 ```
+
+ * Password aus 4. verwenden 
+
 
 ## 11. Rechte prüfen
 
 ```bash
+# "test" wäre ein beliebiges Secret, was ich anlegen wollen würde 
 bao token capabilities secret/data/test
 bao read identity/group/name/admins
 ```
