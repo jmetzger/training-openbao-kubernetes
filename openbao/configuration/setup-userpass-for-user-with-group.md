@@ -1,20 +1,40 @@
 # OpenBao Userpass Setup mit Gruppenbasierter Rechtevergabe
 
-## 1. Userpass Auth-Methode aktivieren
+## 1. Userpass Auth-Methode aktivieren (als Nutzer mit root-token) 
+
+  * in unserem Fall root
 
 ```bash
-sudo bao auth enable userpass
+sudo su -
+env | grep BAO_ADDR
+# Ansonsten setzen
+# export BAO_ADDR=http://127.0.0.1:8200
+
 ```
+
+```bash
+bao auth enable userpass
+```
+
+<img width="1799" height="526" alt="image" src="https://github.com/user-attachments/assets/4eb7b2ae-6b47-4dc1-913c-2f319d317e6a" />
+
 
 ## 2. Prüfen ob gemountet
 
 ```bash
-sudo bao auth list
+bao auth list
 ```
 
 Erwartete Ausgabe: `userpass/` mit Typ `userpass`.
 
+<img width="1326" height="182" alt="image" src="https://github.com/user-attachments/assets/3db71117-c2b4-4437-a8fa-9a0955daf316" />
+
+
 ## 3. Admin-Policy erstellen
+
+```
+nano admin-policy.hcl
+```
 
 ```hcl
 # admin-policy.hcl
@@ -22,8 +42,9 @@ path "secret/*" {
   capabilities = ["create", "read", "update", "delete", "list"]
 }
 
+# kein sudo - rechte 
 path "auth/*" {
-  capabilities = ["create", "read", "update", "delete", "list", "sudo"]
+  capabilities = ["create", "read", "update", "delete", "list"]
 }
 
 path "sys/policies/*" {
@@ -34,13 +55,17 @@ path "sys/mounts/*" {
   capabilities = ["create", "read", "update", "delete", "list"]
 }
 
+# keine sudo - rechte 
 path "sys/health" {
-  capabilities = ["read", "sudo"]
+  capabilities = ["read"]
 }
 
+# keine sudo rechte 
 path "sys/audit/*" {
-  capabilities = ["create", "read", "update", "delete", "list", "sudo"]
+  capabilities = ["create", "read", "update", "delete", "list"]
 }
+
+
 ```
 
 Policy hochladen:
