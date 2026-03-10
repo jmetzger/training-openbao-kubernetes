@@ -67,6 +67,13 @@
   - Datei mit chmod 440 geschützt
   - PRD.md: "noch nicht umgesetzt" Vermerk entfernt
 
+- [x] BUG-008 behoben: nginx Installation in Phase 1 explizit verifizieren
+  - Nach `apt-get install`: `command -v nginx` prüfen
+  - Fallback auf `archive.ubuntu.com` wenn DO Mirror nicht erreichbar (sed über alle .list/.sources Dateien)
+  - apt-get Output wird ins STATUS_FILE geloggt (bisher still)
+  - Phase 4: zusätzlicher Sicherheitscheck `command -v nginx` mit präziser Fehlermeldung "nginx binary nicht gefunden"
+  - PRD.md BUG-008 Status: Offen → behoben
+
 ## Ausstehend
 
 - [ ] BUG-006 im echten Deployment verifizieren (Agentic Loop mit CERTBOT_STAGING=1)

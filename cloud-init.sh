@@ -72,8 +72,25 @@ systemctl restart ssh 2>/dev/null || systemctl restart sshd
 
 # Pakete
 export DEBIAN_FRONTEND=noninteractive
-apt-get update -qq
-apt-get install -y -qq nginx certbot python3-certbot-nginx curl wget dnsutils ufw
+apt-get update -qq 2>&1 | tee -a "$STATUS_FILE"
+apt-get install -y -qq nginx certbot python3-certbot-nginx curl wget dnsutils ufw \
+  2>&1 | tee -a "$STATUS_FILE"
+
+# BUG-008: nginx-Installation explizit prüfen – apt-get kann bei Mirror-Problemen
+# (z.B. mirrors.digitalocean.com nicht erreichbar) still fehlschlagen
+if ! command -v nginx >/dev/null 2>&1; then
+  log "WARNUNG: nginx nicht installiert – möglicherweise DO Mirror-Problem. Wechsle auf archive.ubuntu.com..."
+  # Alle apt-Source-Dateien patchen (.list und .sources / deb822-Format)
+  find /etc/apt -name "*.list" -o -name "*.sources" 2>/dev/null \
+    | xargs sed -i 's|mirrors.digitalocean.com|archive.ubuntu.com|g' 2>/dev/null || true
+  apt-get update -qq 2>&1 | tee -a "$STATUS_FILE"
+  apt-get install -y -qq nginx certbot python3-certbot-nginx curl wget dnsutils ufw \
+    2>&1 | tee -a "$STATUS_FILE" \
+    || fail "Paket-Installation auch mit Fallback-Mirror fehlgeschlagen"
+  command -v nginx >/dev/null 2>&1 \
+    || fail "nginx nicht installiert – auch Fallback-Mirror fehlgeschlagen"
+  log "Pakete erfolgreich via Fallback-Mirror (archive.ubuntu.com) installiert"
+fi
 
 # nginx und doctl: doctl installieren
 DOCTL_VERSION="1.151.0"
@@ -171,7 +188,9 @@ NGINX_EOF
 ln -sf /etc/nginx/sites-available/openbao /etc/nginx/sites-enabled/openbao
 rm -f /etc/nginx/sites-enabled/default
 
-nginx -t || fail "nginx Konfiguration ungültig"
+# BUG-008: Sicherheitscheck – sollte durch Phase-1-Prüfung abgedeckt sein
+command -v nginx >/dev/null 2>&1 || fail "nginx binary nicht gefunden – Installation in Phase 1 fehlgeschlagen"
+nginx -t || fail "nginx Konfiguration ungültig (nginx -t)"
 systemctl enable nginx
 systemctl restart nginx
 

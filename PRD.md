@@ -9,7 +9,10 @@ Self-service Deployment eines oder mehrerer Server auf DigitalOcean per einzigem
 ```bash
 ./install-openbao-single.sh        # 1 Server für den eigenen $USER
 ./install-openbao-single.sh 5      # 5 Trainings-Server: tln1 … tln5
+./install-openbao-single.sh alice  # 1 Server: TRAINING_USER=alice, Domain openbao.alice.do.t3isp.de
 ```
+
+Wird als erstes Argument ein Wort übergeben, das mit einem Buchstaben (a–z) beginnt, wird es **nicht** als Anzahl interpretiert, sondern als `__TRAINING_USER__`-Name. Dieser Name wird sowohl als Nutzername auf dem Server als auch als Subdomain-Segment verwendet: `openbao.<NAME>.do.t3isp.de`.
 
 Nach erfolgreichem Durchlauf ist jeder Server erreichbar unter `https://openbao.<USER>.do.t3isp.de`
 mit gültigem Let's Encrypt Zertifikat. **OpenBao wird in diesem Schritt nicht installiert** – das erfolgt im nächsten Schritt des Trainings.
@@ -25,20 +28,23 @@ Löscht alle deployten Droplets und DNS-Records vollständig und automatisiert �
 ### Aufruf
 
 ```bash
-./destroy-openbao-single.sh           # löscht openbao-$USER + DNS-Record
-./destroy-openbao-single.sh 5         # löscht openbao-tln1 … openbao-tln5 + alle DNS-Records
-./destroy-openbao-single.sh all       # löscht ALLE Droplets mit Prefix "openbao-" + alle DNS-Records
+./destroy-openbao-single.sh           # löscht openbao-$USER (kein DNS-Löschen)
+./destroy-openbao-single.sh 5         # löscht openbao-tln1 … openbao-tln5 (kein DNS-Löschen)
+./destroy-openbao-single.sh alice     # löscht openbao-alice (Name beginnt mit a-z → kein Zähler)
+./destroy-openbao-single.sh all       # löscht ALLE Droplets mit Prefix "openbao-" (kein DNS-Löschen)
 ```
+
+Wird als Argument ein Wort übergeben, das mit einem Buchstaben (a–z) beginnt, wird es als Nutzername interpretiert (nicht als Zähler): `destroy-openbao-single.sh alice` löscht das Droplet `openbao-alice`.
 
 ### Verhalten
 
 - Lädt `.env` (benötigt `DIGITALOCEAN_ACCESS_TOKEN`)
 - Bestätigung vor dem Löschen: zeigt Liste aller zu löschenden Droplets und fragt `Wirklich löschen? [y/N]`
-- Löscht **parallel**: Droplet via `doctl compute droplet delete` + DNS-Record via `doctl compute domain records delete`
+- Löscht **nur Droplets** – DNS-Records werden **nicht gelöscht**
 - Gibt Gesamtübersicht aus:
   ```
-  tln1  ✓  Droplet gelöscht, DNS-Record entfernt
-  tln2  ✓  Droplet gelöscht, DNS-Record entfernt
+  tln1  ✓  Droplet gelöscht
+  tln2  ✓  Droplet gelöscht
   tln3  ✗  Droplet nicht gefunden (bereits gelöscht?)
   ```
 - Exit-Code: `0` wenn alles gelöscht (oder nicht vorhanden), `1` bei API-Fehler
@@ -55,7 +61,7 @@ Claude testet das Destroy-Script nach jedem Multi-Server-Deployment:
 1. Deployment von 2 Servern (`tln1`, `tln2`) verifizieren (5 Tests grün)
 2. `./destroy-openbao-single.sh 2` ausführen
 3. Prüfen dass Droplets nicht mehr existieren (`doctl compute droplet list`)
-4. Prüfen dass DNS-Records entfernt wurden (`doctl compute domain records list do.t3isp.de`)
+4. Prüfen dass DNS-Records **noch vorhanden** sind (`doctl compute domain records list do.t3isp.de`)
 5. Prüfen dass HTTPS nicht mehr erreichbar ist (`curl https://openbao.tln1.do.t3isp.de` → Fehler erwartet)
 
 Das Script gilt als fertig wenn alle 5 Destroy-Tests grün sind.
@@ -67,16 +73,19 @@ Das Script gilt als fertig wenn alle 5 Destroy-Tests grün sind.
 ### Aufruf
 
 ```bash
-./install-openbao-single.sh <ANZAHL>
+./install-openbao-single.sh <ANZAHL|NAME>
 ```
 
-Wird eine Zahl übergeben, werden `<ANZAHL>` Server parallel deploytet. Die Nutzerkennung `$USER` wird dabei durch `tln<N>` ersetzt:
+Das erste Argument wird anhand seines ersten Zeichens interpretiert:
+- **Zahl (0–9):** Anzahl der Trainings-Server (`tln1` … `tln<N>`)
+- **Buchstabe (a–z):** Direkter Nutzername – genau 1 Server wird deployt, der Name wird als `__TRAINING_USER__` und als Subdomain verwendet
 
 | Aufruf | Deployete Server | Domains |
 |---|---|---|
 | `./install-openbao-single.sh` | 1 | `openbao.$USER.do.t3isp.de` |
 | `./install-openbao-single.sh 1` | 1 | `openbao.tln1.do.t3isp.de` |
 | `./install-openbao-single.sh 5` | 5 | `openbao.tln1.do.t3isp.de` … `openbao.tln5.do.t3isp.de` |
+| `./install-openbao-single.sh alice` | 1 | `openbao.alice.do.t3isp.de` |
 
 ### Verhalten
 
@@ -214,7 +223,7 @@ Das Script läuft als `user-data` auf dem Droplet und schreibt seinen Fortschrit
 
 **Phase 2 – IP & DNS**
 - Droplet-IP via Metadata-API (`169.254.169.254`) ermitteln
-- A-Record `openbao.<USER>.do.t3isp.de` → Droplet-IP in `do.t3isp.de` erstellen oder aktualisieren (via `doctl compute domain records`)
+- A-Record `openbao.<USER>.do.t3isp.de` → Droplet-IP in `do.t3isp.de` **erstellen oder aktualisieren** (via `doctl compute domain records`): existiert der Record bereits, wird er per `doctl compute domain records update` mit der neuen IP aktualisiert statt neu angelegt
 - DNS-Propagation abwarten: max. 5 Minuten, prüft Google DNS (`8.8.8.8`) und DigitalOcean Nameserver
 
 **Phase 3 – Firewall**
@@ -593,7 +602,7 @@ Warten bis 2026-03-10 23:08 UTC, danach funktioniert Certbot wieder.
 
 ### BUG-008: nginx Konfiguration ungültig – Phase 4 schlägt fehl
 
-**Status:** Offen
+**Status:** ✓ Behoben (2026-03-10)
 
 **Symptom:**
 ```
@@ -612,10 +621,22 @@ E: The repository 'http://mirrors.digitalocean.com/ubuntu noble Release' no long
 ```
 `apt-get install nginx` schlug dadurch still fehl. Phase 1 prüfte den Exit-Code nicht korrekt und meldete trotzdem "Phase 1 OK". Phase 4 scheiterte dann an `nginx -t` mit "command not found", was als "nginx Konfiguration ungültig" geloggt wurde.
 
-**To-Do:**
-- Phase 1 in `cloud-init.sh`: nach `apt-get install` explizit prüfen ob `nginx` wirklich installiert wurde (`command -v nginx || fail "nginx nicht installiert"`)
-- Bei apt-Fehlern: auf offizielle Ubuntu-Mirror (`archive.ubuntu.com`) als Fallback wechseln oder `apt-get install --fix-missing` nutzen
-- Fehlermeldung in Phase 4 präzisieren: "nginx binary nicht gefunden" statt "nginx Konfiguration ungültig"
+**Fix in `cloud-init.sh` Phase 1:**
+
+Nach `apt-get install` wird explizit geprüft ob `nginx` wirklich installiert wurde. Bei Fehler: Fallback auf `archive.ubuntu.com`:
+
+```bash
+if ! command -v nginx >/dev/null 2>&1; then
+  log "WARNUNG: nginx nicht installiert – DO Mirror-Problem. Wechsle auf archive.ubuntu.com..."
+  find /etc/apt -name "*.list" -o -name "*.sources" 2>/dev/null \
+    | xargs sed -i 's|mirrors.digitalocean.com|archive.ubuntu.com|g' 2>/dev/null || true
+  apt-get update -qq && apt-get install -y -qq nginx certbot ... \
+    || fail "Paket-Installation auch mit Fallback-Mirror fehlgeschlagen"
+  command -v nginx >/dev/null 2>&1 || fail "nginx nicht installiert"
+fi
+```
+
+Phase 4: Zusätzlicher Sicherheitscheck `command -v nginx` mit präziser Fehlermeldung "nginx binary nicht gefunden".
 
 ---
 
