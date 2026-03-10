@@ -216,7 +216,7 @@ nano secret-store.yaml
 
 ```yaml
 # secret-store.yaml
-apiVersion: external-secrets.io/v1beta1
+apiVersion: external-secrets.io/v1
 kind: SecretStore
 metadata:
   name: openbao-backend
