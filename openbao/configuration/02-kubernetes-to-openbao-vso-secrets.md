@@ -94,16 +94,9 @@ Prüfen, ob der Operator läuft:
 kubectl get pods -n vault-secrets-operator-system
 ```
 
+---
 
 ## Schritt 5: Kubernetes Auth Method aktivieren und konfigurieren
-
-### Auth Method aktivieren
-
-```bash
-bao auth enable kubernetes
-```
-
-### Kubernetes Auth konfigurieren
 
 Da OpenBao **außerhalb** des Clusters läuft, muss es den API-Server erreichen und ServiceAccount-Tokens validieren können. Dafür braucht es explizit:
 
@@ -111,7 +104,9 @@ Da OpenBao **außerhalb** des Clusters läuft, muss es den API-Server erreichen 
 - `kubernetes_ca_cert` — CA-Zertifikat des Clusters
 - `token_reviewer_jwt` — ein langlebiger Token mit `system:auth-delegator`-Berechtigung
 
-**ServiceAccount und ClusterRoleBinding für Token-Review anlegen (im Cluster):**
+### 5a: ServiceAccount und ClusterRoleBinding für Token-Review anlegen (im Cluster)
+
+> **Wichtig:** Dieser Schritt muss **vor** dem Aktivieren der Auth Method erfolgen, da OpenBao für die Token-Validierung einen gültigen `token_reviewer_jwt` benötigt.
 
 ```bash
 kubectl create serviceaccount vault-auth -n default
@@ -121,7 +116,7 @@ kubectl create clusterrolebinding vault-auth-delegator \
   --serviceaccount=default:vault-auth
 ```
 
-**Langlebigen Token erzeugen:**
+### 5b: Langlebigen Token erzeugen
 
 ```yaml
 # vault-auth-token.yaml
@@ -139,7 +134,7 @@ type: kubernetes.io/service-account-token
 kubectl apply -f vault-auth-token.yaml
 ```
 
-**Werte auslesen:**
+### 5c: Werte auslesen
 
 ```bash
 # Token
@@ -152,7 +147,13 @@ KUBE_CA_CERT=$(kubectl get secret vault-auth-token -o jsonpath='{.data.ca\.crt}'
 KUBE_HOST=$(kubectl config view --minify -o jsonpath='{.clusters[0].cluster.server}')
 ```
 
-**OpenBao konfigurieren (auf der VM):**
+### 5d: Auth Method in OpenBao aktivieren
+
+```bash
+bao auth enable kubernetes
+```
+
+### 5e: OpenBao konfigurieren (auf der VM)
 
 ```bash
 bao write auth/kubernetes/config \
@@ -163,7 +164,7 @@ bao write auth/kubernetes/config \
 
 > **Wichtig:** `kubernetes_host` muss die **externe** Adresse des API-Servers sein, die von der OpenBao-VM aus erreichbar ist — nicht `https://kubernetes.default.svc:443`.
 
-### Rolle anlegen
+### 5f: Rolle anlegen
 
 ```bash
 bao write auth/kubernetes/role/mariadb \
@@ -174,8 +175,6 @@ bao write auth/kubernetes/role/mariadb \
 ```
 
 ---
-
-
 
 ## Schritt 6: VaultConnection erstellen
 
