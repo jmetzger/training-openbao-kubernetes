@@ -135,7 +135,9 @@ muss durch einen `proxy_pass` zu OpenBao ersetzt werden.
 
 ```
 DOMAIN="openbao.<DEIN-NAME>.do.t3isp.de"
+```
 
+```
 sudo tee /etc/nginx/sites-available/openbao > /dev/null <<EOF
 server {
     listen 80;
