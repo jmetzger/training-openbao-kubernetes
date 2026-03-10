@@ -15,8 +15,8 @@
      * [Standalone – .deb-Paket hinter nginx Reverse Proxy](openbao/installation/standalone.md)
     
   1. OpenBao Konfiguration
-     * [User für Passwort-Authentifizierung als Admin-Nutzer in Gruppe aufsetzen](openbao/configuration/setup-userpass-for-user-with-group.md)
-     * [MariaDB Deployment mit OpenBao & Vault Secrets Operator (VSO)](openbao/configuration/kubernetes-to-openbao-vso-secrets.md)
+     * [User für Passwort-Authentifizierung als Admin-Nutzer in Gruppe aufsetzen](openbao/configuration/01-setup-userpass-for-user-with-group.md)
+     * [MariaDB Deployment mit OpenBao & Vault Secrets Operator (VSO)](openbao/configuration/02-kubernetes-to-openbao-vso-secrets.md)
    
 ## Backlog 
 
