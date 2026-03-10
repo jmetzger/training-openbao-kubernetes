@@ -37,34 +37,57 @@ nano admin-policy.hcl
 ```
 
 ```hcl
-# admin-policy.hcl
+# Day-2-Day - Admins - Teams bis 10 Personen
+# Kein unterschiedliche Admin-Rollen 
+# Secrets verwalten
 path "secret/*" {
   capabilities = ["create", "read", "update", "delete", "list"]
 }
 
-# kein sudo - rechte 
-path "auth/*" {
+# User verwalten (alle Auth-Methoden)
+path "auth/userpass/users/*" {
   capabilities = ["create", "read", "update", "delete", "list"]
 }
 
+# Policies verwalten
 path "sys/policies/*" {
   capabilities = ["create", "read", "update", "delete", "list"]
 }
 
+# Identity (Entities, Gruppen)
+path "identity/*" {
+  capabilities = ["create", "read", "update", "delete", "list"]
+}
+
+# Secrets Engines mounten/verwalten
 path "sys/mounts/*" {
   capabilities = ["create", "read", "update", "delete", "list"]
 }
 
-# keine sudo - rechte 
+# Auth-Methoden mounten/verwalten
+path "sys/auth/*" {
+  capabilities = ["create", "read", "update", "delete", "list"]
+}
+
+# System-Status lesen
 path "sys/health" {
   capabilities = ["read"]
 }
 
-# keine sudo rechte 
-path "sys/audit/*" {
+# Audit lesen (nicht ändern)
+path "sys/audit" {
+  capabilities = ["read"]
+}
+
+# Leases verwalten (Secrets widerrufen)
+path "sys/leases/*" {
   capabilities = ["create", "read", "update", "delete", "list"]
 }
 
+# Eigenes Token verwalten
+path "auth/token/*" {
+  capabilities = ["create", "read", "update", "delete", "list"]
+}
 
 ```
 
@@ -153,6 +176,11 @@ bao read identity/group/name/admins
 
 ## Optional: Self-Service Passwortwechsel erlauben
 
+### Step 1: token revoken und als root anmelden 
+
+
+
+
 Policy für den User, um das eigene Passwort zu ändern:
 
 ```
@@ -177,11 +205,16 @@ path "auth/userpass/users/{{identity.entity.aliases.<USERPASS_ACCESSOR>.name}}/p
 bao policy write password-change password-change.hcl
 ```
 
-Dann entweder dem User direkt zuweisen oder eine zweite Gruppe dafür erstellen.
-
-## Nach der Admin-Arbeit: Token revoken
-
-```bash
-bao token revoke -self
-unset BAO_TOKEN
 ```
+# in admins gruppe aufnehmen
+# Schritt 1  - auslesen
+bao read -format=json identity/group/name/admins
+# Schritt 2 - Neue Gruppe ergänzen
+# Es wird nur das genommen, was hier steht, alles andere wird überschrieben
+bao write identity/group \
+    name="admins" \
+    policies="admin-policy,password-change"
+```
+
+
+
