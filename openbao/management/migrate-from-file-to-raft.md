@@ -1,5 +1,8 @@
 # Übung: OpenBao Storage Migration — File → Raft
 
+#### 2026-03-10 Achtung: Funktioniert nicht, der Openbao - Server kann mit den migrierten Daten nicht gestartet werden, nach dem unseal, springt er wieder auf seal 
+
+
 ## Voraussetzungen
 
 - OpenBao läuft aktuell mit `storage "file"`
