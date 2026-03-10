@@ -162,6 +162,10 @@ cd openbao-hcl
 nano password-change.hcl
 ```
 
+```bash
+bao auth list
+```
+
 ```hcl
 # password-change.hcl
 path "auth/userpass/users/{{identity.entity.aliases.<USERPASS_ACCESSOR>.name}}/password" {
