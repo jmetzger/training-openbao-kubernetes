@@ -70,6 +70,13 @@ EOF
 
 ```bash
 bao operator migrate -config=/etc/openbao/migrate.hcl
+# Rechte setzen
+chown -R openbao:openbao /opt/openbao/data-raft/*
+
+cd /opt/openbao/
+mv data data-file-bkup
+mv data-raft data 
+
 ```
 
 Erwartete Ausgabe bei Erfolg:
