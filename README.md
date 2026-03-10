@@ -2,10 +2,14 @@
 
 ## Server verwalten
 
-  - **Server bereitstellen:** `./install-openbao-single.sh` oder `./install-openbao-single.sh <N>`
-  - **Server löschen:** [destroy-openbao-single.sh – Usage Guide](docs/destroy-openbao-single.md)
+  -
 
 ## Agenda
+
+  1. Bereitstellen der Openbao-Server (durch Trainer erledigt)
+     * **Server bereitstellen:** `./install-openbao-single.sh` oder `./install-openbao-single.sh <N>`
+  -  * (Server löschen)[destroy-openbao-single.sh – Usage Guide](docs/destroy-openbao-single.md)
+
 
   1. OpenBao Grundlagen
      * [Architektur-Überblick](openbao/overview.md)
