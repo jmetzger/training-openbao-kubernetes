@@ -1,5 +1,3 @@
-# Admin-Nutzer anlegen (zugehörig zur Gruppe admin, mit admin-Rechten) 
-
 # OpenBao Userpass Setup mit Gruppenbasierter Rechtevergabe
 
 ## 1. Userpass Auth-Methode aktivieren
