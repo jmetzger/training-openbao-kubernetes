@@ -210,6 +210,10 @@ kubectl apply -f mariadb-sa.yaml
 
 Der SecretStore teilt ESO mit, wie es sich mit OpenBao verbinden und authentifizieren soll.
 
+```
+nano secret-store.yaml
+```
+
 ```yaml
 # secret-store.yaml
 apiVersion: external-secrets.io/v1beta1
@@ -220,7 +224,7 @@ metadata:
 spec:
   provider:
     vault:
-      server: "https://openbao.tn1.do.t3isp.de"
+      server: "https://openbao.tn<tn-nr>.do.t3isp.de"
       path: "secret"
       version: "v2"
       auth:
