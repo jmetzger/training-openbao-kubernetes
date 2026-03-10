@@ -13,7 +13,6 @@
 
   2. Installation
      * [Standalone – .deb-Paket hinter nginx Reverse Proxy](openbao/installation/standalone.md)
-     * [Single Node – Debian + nginx Reverse Proxy](openbao/installation/single.md)
     
 ## Backlog 
 
