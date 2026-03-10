@@ -233,7 +233,17 @@ Ausgabe (Beispiel):
 }
 ```
 
-**Die Keys und den Root Token notieren – sie koennen nicht wiederhergestellt werden.**
+> **SICHERHEITSHINWEIS:**
+> Diese Datei enthaelt hochsensible Daten. Unseal Keys und Root Token muessen
+> an einem sicheren Ort ausserhalb des Servers gespeichert werden (z.B. Passwortmanager,
+> verschluesseltes Laufwerk). Danach die Datei vom Server loeschen:
+>
+> ```
+> cp ~/openbao-init.json /sicherer/ort/   # erst sichern!
+> rm ~/openbao-init.json                  # dann loeschen
+> ```
+>
+> Wer Zugriff auf diese Datei hat, hat vollen Zugriff auf OpenBao und alle gespeicherten Secrets.
 
 ---
 
