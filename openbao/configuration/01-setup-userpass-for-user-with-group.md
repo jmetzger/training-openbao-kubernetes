@@ -65,8 +65,9 @@ path "sys/mounts/*" {
 }
 
 # Auth-Methoden mounten/verwalten
+# sudo ist hier als admin zwingend erforderlich 
 path "sys/auth/*" {
-  capabilities = ["create", "read", "update", "delete", "list"]
+  capabilities = ["create", "read", "update", "delete", "list","sudo"]
 }
 
 # System-Status lesen
