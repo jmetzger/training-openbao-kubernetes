@@ -120,7 +120,9 @@ Nach einem Restore ist der Node **sealed** — alle API-Anfragen werden mit **50
 ### Teil 1: Backup-Policy und Token erstellen
 
 ```bash
-# Als root einloggen
+# Als root einloggen - root-token raussuchen
+cd
+mkdir -p ~/openbao-hcl 
 bao login
 
 # Policy-Datei erstellen
