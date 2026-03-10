@@ -59,9 +59,17 @@ storage_destination "raft" {
   path    = "/opt/openbao/data-raft"
   node_id = "node1"
 }
-cluster_addr = "https://127.0.0.1:8201"
+api_addr = "https://openbao.tn1.do.t3isp.de:8200"
+# mit ip a interne ip ausfinding machen 
+cluster_addr = "http://10.135.0.5:8201"
 EOF
 ```
+
+```
+# Achtung: Der Port muss in der Firewall geöffnet werden
+ufw allow from 10.135.0.0/24 to 10.135.0.5 port 8201 proto tcp
+```
+
 
 > Diese Config wird **nur** vom `migrate`-Befehl gelesen — nicht von OpenBao selbst.
 > Der Pfad `data-raft` ist bewusst gewählt, damit er während der Migration nicht mit dem alten `data`-Dir kollidiert. Am Ende wird er auf `/opt/openbao/data` umbenannt.
