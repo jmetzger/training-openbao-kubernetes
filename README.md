@@ -1,19 +1,15 @@
-# OpenBao on Kubernetes Training
-
-## Server verwalten
-
-  -
+# OpenBao & Kubernetes
 
 ## Agenda
 
   1. Bereitstellen der Openbao-Server (durch Trainer erledigt)
-     * **Server bereitstellen:** `./install-openbao-single.sh` oder `./install-openbao-single.sh <N>`
-  -  * (Server löschen)[destroy-openbao-single.sh – Usage Guide](docs/destroy-openbao-single.md)
-
+     * **Server bereitstellen:** `./install-openbao-single.sh` oder `./install-openbao-single.sh <N>]`
+  -  * [Server löschen](destroy-openbao-single.sh – Usage Guide](docs/destroy-openbao-single.md)
 
   1. OpenBao Grundlagen
      * [Architektur-Überblick](openbao/overview.md)
      * [Was ist OpenBao?](openbao/what-is-openbao.md)
+     * [Was sind secret-engines?](openbao/secret-engines.md)
 
   2. Installation
      * [Standalone – .deb-Paket hinter nginx Reverse Proxy](openbao/installation/standalone.md)
