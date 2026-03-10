@@ -4,14 +4,17 @@
 
   1. Bereitstellen der Openbao-Server (durch Trainer erledigt)
      * **Server bereitstellen:** `./install-openbao-single.sh` oder `./install-openbao-single.sh <N>]`
-  -  * [Server löschen](destroy-openbao-single.sh – Usage Guide](docs/destroy-openbao-single.md)
+  -  * [Server löschen](docs/destroy-openbao-single.md)
 
   1. OpenBao Grundlagen
      * [Architektur-Überblick](openbao/overview.md)
      * [Was ist OpenBao?](openbao/what-is-openbao.md)
      * [Was sind secret-engines?](openbao/secret-engines.md)
+    
+  1. OpenBao Konfiguration
+     * [User für Passwort-Authentifizierung als Admin-Nutzer in Gruppe aufsetzen](openbao/configuration/setup-userpass-for-user-with-group.md)
 
-  2. Installation
+  3. Installation
      * [Standalone – .deb-Paket hinter nginx Reverse Proxy](openbao/installation/standalone.md)
     
 ## Backlog 
