@@ -175,24 +175,7 @@ bao write auth/kubernetes/role/mariadb \
 
 ---
 
-## Schritt 5: Vault Secrets Operator (VSO) installieren
 
-```bash
-helm repo add hashicorp https://helm.releases.hashicorp.com
-helm repo update
-
-helm install vault-secrets-operator hashicorp/vault-secrets-operator \
-  -n vault-secrets-operator-system \
-  --create-namespace
-```
-
-Prüfen, ob der Operator läuft:
-
-```bash
-kubectl get pods -n vault-secrets-operator-system
-```
-
----
 
 ## Schritt 6: VaultConnection erstellen
 
