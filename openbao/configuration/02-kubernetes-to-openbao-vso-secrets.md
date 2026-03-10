@@ -123,6 +123,10 @@ kubectl create clusterrolebinding vault-auth-delegator \
 
 ### 5b: Langlebigen Token erzeugen
 
+```
+nano vault-auth-token.yaml
+```
+
 ```yaml
 # vault-auth-token.yaml
 apiVersion: v1
