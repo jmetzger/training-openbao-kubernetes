@@ -702,6 +702,10 @@ kubectl get secret mariadb-k8s-secret -o yaml
 
 ## Schritt 10: MariaDB Deployment ausrollen
 
+```
+nano mariadb-deployment.yaml
+```
+
 ```yaml
 # mariadb-deployment.yaml
 apiVersion: apps/v1
