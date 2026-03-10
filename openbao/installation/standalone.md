@@ -212,13 +212,28 @@ Dauerhaft speichern:
 echo 'export BAO_ADDR="http://127.0.0.1:8200"' >> ~/.bashrc
 ```
 
+Verifizieren
+
+  * Wenn BAO_ADDR nicht richtig gesetzt oder garnicht gesetzt ist kommt ein Fehler oder keine Antwort 
+
+```
+# Letztendlich kommuniziert bao status auch über die https:// api 
+bao status 
+```
+
 ---
 
 ## Schritt 7: Initialisieren
 
 ```
 bao operator init -key-shares=5 -key-threshold=3 -format=json | tee ~/openbao-init.json
+
+## das ist das gleiche wie (default) 
+bao operator init -format=json | tee ~/openbao-init.json
+
 ```
+
+
 
 Die Ausgabe enthaelt 5 Unseal Keys und den Root Token – diese jetzt sichern:
 
