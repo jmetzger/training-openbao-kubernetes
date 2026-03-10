@@ -14,9 +14,18 @@ Schritt-für-Schritt-Anleitung: Ein Secret (`MARIADB_ROOT_PASSWORD`) wird in Ope
 
 ---
 
+## Prep 1: Done by trainer: Install bao executable 
+
+```
+wget https://github.com/openbao/openbao/releases/download/v2.5.1/bao_2.5.1_Linux_x86_64.tar.gz
+tar xzf bao_2.5.1_Linux_x86_64.tar.gz
+sudo mv bao /usr/local/bin/
+```
+
 ## Schritt 1: KV Secrets Engine aktivieren
 
 ```bash
+bao login -method=userpass username=<dein-user>
 bao secrets enable -path=secret kv-v2
 ```
 
