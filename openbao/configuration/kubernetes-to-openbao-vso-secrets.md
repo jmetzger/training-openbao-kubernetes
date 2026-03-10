@@ -51,7 +51,15 @@ bao kv get secret/mariadb
 
 ## Schritt 3: Policy erstellen
 
-Datei `mariadb-read.hcl`:
+```
+cd
+mkdir -p openbao-hcl/mariadb
+cd openbao-hcl/mariadb
+```
+
+```
+nano mariadb-read.hcl
+```
 
 ```hcl
 path "secret/data/mariadb" {
