@@ -187,6 +187,7 @@ sudo systemctl reload nginx
 sudo systemctl enable openbao
 sudo systemctl start openbao
 sudo systemctl status openbao
+sudo journalctl -u openbao 
 ```
 
 Erwartete Ausgabe (Auszug):
