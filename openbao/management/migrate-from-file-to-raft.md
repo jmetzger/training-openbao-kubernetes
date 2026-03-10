@@ -59,6 +59,7 @@ storage_destination "raft" {
   path    = "/opt/openbao/data-raft"
   node_id = "node1"
 }
+cluster_addr = "https://127.0.0.1:8201"
 EOF
 ```
 
@@ -81,7 +82,7 @@ Success! All of the keys have been migrated.
 
 ```bash
 # Backup der alten Config
-cp /etc/openbao/config.hcl /etc/openbao/config.hcl.bak
+cp -a /etc/openbao/openbao.hcl /etc/openbao/openbao.hcl.bak
 ```
 
 In `/etc/openbao/config.hcl` den Storage-Block ändern:
@@ -94,9 +95,13 @@ In `/etc/openbao/config.hcl` den Storage-Block ändern:
 
 # NEU:
 storage "raft" {
-  path    = "/opt/openbao/data-raft"
+  path    = "/opt/openbao/data"
   node_id = "node1"
 }
+
+# wird für raft gebraucht 
+cluster_addr = "https://openbao.tn<tn-nr>.do.t3isp.de:8201"
+api_addr     = "https://openbao.tn<tn-nr>.do.t3isp.de:8200"
 ```
 
 ## Schritt 8: OpenBao starten und unsealen
