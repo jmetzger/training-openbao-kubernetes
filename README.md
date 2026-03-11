@@ -8,7 +8,6 @@
        
   1. OpenBao Grundlagen
      * [Architektur-Überblick](openbao/overview.md)
-     * [Was ist OpenBao?](openbao/what-is-openbao.md)
      * [Was sind secret-engines?](openbao/secret-engines.md)
 
   1. OpenBao Installation
