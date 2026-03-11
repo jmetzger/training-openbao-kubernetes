@@ -86,7 +86,6 @@ sudo su
 ```
 wget https://github.com/openbao/openbao/releases/download/v2.5.1/openbao_2.5.1_linux_amd64.deb
 sudo dpkg -i openbao_2.5.1_linux_amd64.deb
-sudo apt-get install -f
 ```
 
 Installation pruefen:
