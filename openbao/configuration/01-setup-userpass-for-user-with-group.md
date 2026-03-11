@@ -193,7 +193,7 @@ bao write auth/userpass/users/jochen/password password="neuesPasswort"
   * So teste ich, ob es funktioniert
 
 ```
-bao write auth/userpass/users/jochen/password password="neuesPasswort"
+bao login -method=userpass username=jochen
 ```
 
 
