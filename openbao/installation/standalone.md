@@ -122,7 +122,7 @@ listener "tcp" {
   tls_disable = 1
 }
 
-api_addr = "https://openbao.tn1.do.t3isp.de:8200"
+api_addr = "https://openbao.tn<tln-nr>.do.t3isp.de:8200"
 # Achtung: Hier Deine private IP eintragen
 # Abfrage mit ip a show eth1 (digitalocean)
 cluster_addr = "https://10.135.0.5:8201"
