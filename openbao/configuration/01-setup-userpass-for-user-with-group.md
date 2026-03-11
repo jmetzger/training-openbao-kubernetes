@@ -139,7 +139,7 @@ Die `id` aus der Ausgabe notieren.
 
 > **Hinweis:** Alternativ entsteht die Entity automatisch beim ersten Login. Danach die ID mit `bao read identity/entity/name/jochen` abfragen.
 
-## 8. Entity-Alias verknüpfen
+## 8. Entity-Alias verknüpfen (Welche Authentifizierungs-Methoden sind für diesen Nutzer)
 
 Verbindet die Entity mit dem Userpass-Account:
 
