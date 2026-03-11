@@ -1,5 +1,10 @@
 # OpenBao Userpass Setup mit Gruppenbasierter Rechtevergabe
 
+## Grafik 
+
+<img width="3227" height="1040" alt="image" src="https://github.com/user-attachments/assets/417bc745-7996-442b-a1d8-0b1210e763aa" />
+
+
 ## 1. Userpass Auth-Methode aktivieren (als Nutzer mit root-token) 
 
   * in unserem Fall root
