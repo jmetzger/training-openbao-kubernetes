@@ -197,45 +197,4 @@ bao login -method=userpass username=jochen
 ```
 
 
-### Step 1: token revoken und als root anmelden 
-
-```
-# root-token eingeben 
-bao login
-```
-
-```
-cd
-mkdir -p openbao-hcl
-cd openbao-hcl
-nano password-change.hcl
-```
-
-```bash
-bao auth list
-```
-
-```hcl
-# password-change.hcl
-path "auth/userpass/users/{{identity.entity.aliases.<USERPASS_ACCESSOR>.name}}/password" {
-  capabilities = ["update"]
-}
-```
-
-```bash
-bao policy write password-change password-change.hcl
-```
-
-```
-# in admins gruppe aufnehmen
-# Schritt 1  - auslesen
-bao read -format=json identity/group/name/admins
-# Schritt 2 - Neue Gruppe ergänzen
-# Es wird nur das genommen, was hier steht, alles andere wird überschrieben
-bao write identity/group \
-    name="admins" \
-    policies="admin-policy,password-change"
-```
-
-
 
