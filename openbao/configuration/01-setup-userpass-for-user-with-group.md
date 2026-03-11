@@ -33,6 +33,9 @@ Erwartete Ausgabe: `userpass/` mit Typ `userpass`.
 ## 3. Admin-Policy erstellen
 
 ```
+cd
+mkdir -p openbao-hcl
+cd openbao-hcl 
 nano admin-policy.hcl
 ```
 
