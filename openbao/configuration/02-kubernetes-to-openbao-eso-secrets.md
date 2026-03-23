@@ -53,7 +53,7 @@ export CLUSTER_NAME=cluster-jmetzger  # ← Anpassen auf deinen Clusternamen!
 ```bash
 # Kann auch in die ~/.bashrc
 export BAO_ADDR=https://openbao.jmetzger.do.t3isp.de
-bao login -method=userpass username=<dein-user>
+bao login -method=userpass username=admin
 bao secrets enable -path=secret kv-v2
 ```
 
