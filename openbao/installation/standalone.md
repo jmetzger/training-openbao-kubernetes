@@ -116,7 +116,11 @@ storage "raft" {
 }
 
 listener "tcp" {
-  address     = "127.0.0.1:8200"
+# IP festlegen, auf dem die API lauschen soll
+#  address     = "127.0.0.1:8200"
+#  address     = "10.135.0.2:8200"
+# Alle Interfaces 
+  address      = "0.0.0.0:8200"
   cluster_address = "10.135.0.5:8201"
   tls_disable = 1
 }
