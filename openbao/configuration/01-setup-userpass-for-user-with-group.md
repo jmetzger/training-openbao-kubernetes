@@ -52,11 +52,6 @@ path "secret/*" {
   capabilities = ["create", "read", "update", "delete", "list"]
 }
 
-# User verwalten (alle Auth-Methoden)
-path "auth/userpass/users/*" {
-  capabilities = ["create", "read", "update", "delete", "list"]
-}
-
 # Policies verwalten
 path "sys/policies/*" {
   capabilities = ["create", "read", "update", "delete", "list"]
@@ -93,8 +88,8 @@ path "sys/leases/*" {
   capabilities = ["create", "read", "update", "delete", "list"]
 }
 
-# Eigenes Token verwalten
-path "auth/token/*" {
+# Auth-Methoden konfigurieren (Rollen, Config, etc.)
+path "auth/*" {
   capabilities = ["create", "read", "update", "delete", "list"]
 }
 
