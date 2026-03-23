@@ -2,7 +2,7 @@
 
 ## Übersicht
 
-![](/images/openbao_eso_architecture.svg)
+![](/images/openbao_eso_architecture_v2.svg)
 
 
 ## Anleitung 
