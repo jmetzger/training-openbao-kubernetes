@@ -2,7 +2,7 @@
 
 ## Übersicht
 
-![](images/openbao_eso_architecture.svg)
+![](/images/openbao_eso_architecture.svg)
 
 Schritt-für-Schritt-Anleitung: Ein Secret (`MARIADB_ROOT_PASSWORD`) wird in OpenBao gespeichert und über den External Secrets Operator als natives Kubernetes Secret in den MariaDB-Pod injiziert.
 
