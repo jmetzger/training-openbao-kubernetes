@@ -135,7 +135,7 @@ EOF
 ufw allow from 10.135.0.0/24 to 10.135.0.5 port 8201 proto tcp
 
 # Api muss von aussen erreichbar sein (später z.B. für oidc - login notwendig  
-sudo ufw allow to 10.135.0.2 port 8201 proto tcp
+sudo ufw allow to 10.135.0.2 port 8200 proto tcp
 ```
 
 
