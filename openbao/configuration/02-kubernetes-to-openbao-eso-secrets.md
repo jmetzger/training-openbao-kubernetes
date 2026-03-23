@@ -39,7 +39,7 @@ sudo mv bao /usr/local/bin/
 Den eigenen Clusternamen als Variable setzen — wird in allen folgenden Schritten verwendet:
 
 ```bash
-export CLUSTER_NAME=cluster-tn1   # ← Anpassen auf deinen Clusternamen!
+export CLUSTER_NAME=cluster-jmetzger  # ← Anpassen auf deinen Clusternamen!
 ```
 
 > **Tipp:** Wer den Clusternamen nicht kennt: `kubectl config current-context` zeigt den aktuellen Kontext.
