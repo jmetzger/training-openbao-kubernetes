@@ -1,5 +1,9 @@
 # MariaDB Deployment mit OpenBao & External Secrets Operator (ESO)
 
+## Übersicht
+
+![](images/openbao_eso_architecture.svg)
+
 Schritt-für-Schritt-Anleitung: Ein Secret (`MARIADB_ROOT_PASSWORD`) wird in OpenBao gespeichert und über den External Secrets Operator als natives Kubernetes Secret in den MariaDB-Pod injiziert.
 
 > **Setup:** Alle Teilnehmer nutzen den **gleichen OpenBao-Server** (`https://openbao.jmetzger.do.t3isp.de`), aber jeder arbeitet mit seinem **eigenen Kubernetes-Cluster**. Damit sich die Teilnehmer nicht in die Quere kommen, bekommt jeder seinen eigenen Auth-Mount (`kubernetes-<cluster-name>`), eigenen Secret-Pfad (`secret/<cluster-name>/mariadb`) und eigene Policy (`mariadb-read-<cluster-name>`).
