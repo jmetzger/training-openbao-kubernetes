@@ -4,74 +4,14 @@
 
 ![](/images/openbao_eso_architecture.svg)
 
+
+## Anleitung 
+
 Schritt-für-Schritt-Anleitung: Ein Secret (`MARIADB_ROOT_PASSWORD`) wird in OpenBao gespeichert und über den External Secrets Operator als natives Kubernetes Secret in den MariaDB-Pod injiziert.
 
 > **Setup:** Alle Teilnehmer nutzen den **gleichen OpenBao-Server** (`https://openbao.jmetzger.do.t3isp.de`), aber jeder arbeitet mit seinem **eigenen Kubernetes-Cluster**. Damit sich die Teilnehmer nicht in die Quere kommen, bekommt jeder seinen eigenen Auth-Mount (`kubernetes-<cluster-name>`), eigenen Secret-Pfad (`secret/<cluster-name>/mariadb`) und eigene Policy (`mariadb-read-<cluster-name>`).
 
 > **Warum ESO statt VSO?** Der HashiCorp Vault Secrets Operator (VSO) steht unter der BSL 1.1 Lizenz, die kommerzielle Nutzung einschränkt. Der External Secrets Operator ist ein CNCF-Projekt unter Apache 2.0 Lizenz, vendor-neutral und wird von OpenBao offiziell empfohlen. ESO unterstützt neben Vault/OpenBao auch AWS Secrets Manager, Azure Key Vault, GCP Secret Manager u.v.m.
-
-## Architektur-Überblick
-
-```mermaid
-flowchart TB
-    subgraph bao["☁️ OpenBao Server (gemeinsam)"]
-        direction TB
-        kv["🔑 KV-v2 Engine\nsecret/‹cluster-name›/mariadb"]
-        policy["📜 Policy\nmariadb-read-‹cluster-name›\n→ secret/data/‹cluster-name›/mariadb"]
-        authmount["🔐 Auth Mount\nkubernetes-‹cluster-name›"]
-        role["👤 Role: mariadb\nbound_sa: mariadb-sa\nbound_ns: default\npolicies: mariadb-read-‹cluster-name›"]
-        authmount --> role
-        role -.-> policy
-        policy -.-> kv
-    end
-
-    subgraph cluster["⎈ Kubernetes Cluster (pro Teilnehmer)"]
-        direction TB
-
-        subgraph auth_setup["Token Review Setup"]
-            vault_auth_sa["🔧 SA: vault-auth\n+ ClusterRoleBinding\nsystem:auth-delegator"]
-            vault_auth_token["🎫 vault-auth-token\n(langlebiger JWT)"]
-            vault_auth_sa --> vault_auth_token
-        end
-
-        subgraph eso_ns["Namespace: external-secrets"]
-            eso["⚙️ External Secrets\nOperator"]
-        end
-
-        subgraph default_ns["Namespace: default"]
-            mariadb_sa["👤 SA: mariadb-sa"]
-            secretstore["📋 SecretStore\nopenbao-backend\nmountPath: kubernetes-‹cluster-name›"]
-            externalsecret["📋 ExternalSecret\nkey: ‹cluster-name›/mariadb\nrefreshInterval: 60s"]
-            k8s_secret["🔒 K8s Secret\nmariadb-k8s-secret"]
-            pod["🐳 MariaDB Pod\nenv: MARIADB_ROOT_PASSWORD\n← secretKeyRef"]
-        end
-    end
-
-    %% Auth-Flows
-    vault_auth_token -- "token_reviewer_jwt\n+ kubernetes_host\n+ kubernetes_ca_cert" --> authmount
-    mariadb_sa -- "SA-Token zur\nAuthentifizierung" --> secretstore
-    secretstore -- "K8s Auth via\nkubernetes-‹cluster-name›" --> authmount
-
-    %% Secret-Sync-Flow
-    eso -- "watched CRDs" --> secretstore
-    eso -- "watched CRDs" --> externalsecret
-    externalsecret -- "remoteRef" --> secretstore
-    secretstore -- "HTTPS: liest\nsecret/‹cluster-name›/mariadb" --> kv
-    eso -- "erstellt/synct\nalle 60s" --> k8s_secret
-    k8s_secret -- "secretKeyRef:\nroot-password" --> pod
-    pod -. "nutzt" .-> mariadb_sa
-
-    %% Styling
-    style bao fill:#f4e8ff,stroke:#7c3aed,stroke-width:2px
-    style cluster fill:#e8f4ff,stroke:#2563eb,stroke-width:2px
-    style auth_setup fill:#fef3c7,stroke:#d97706
-    style eso_ns fill:#d1fae5,stroke:#059669
-    style default_ns fill:#e0f2fe,stroke:#0284c7
-    style kv fill:#fde68a,stroke:#b45309
-    style k8s_secret fill:#fde68a,stroke:#b45309
-    style pod fill:#bfdbfe,stroke:#1d4ed8
-    style eso fill:#a7f3d0,stroke:#047857
-```
 
 ---
 
