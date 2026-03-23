@@ -85,15 +85,11 @@ mkdir -p openbao-hcl/mariadb
 cd openbao-hcl/mariadb
 ```
 
-```bash
-nano mariadb-read-$CLUSTER_NAME.hcl
-```
-
-```hcl
+cat > mariadb-read-$CLUSTER_NAME.hcl <<EOF
 path "secret/data/$CLUSTER_NAME/mariadb" {
   capabilities = ["read"]
 }
-```
+EOF
 
 Policy schreiben:
 
