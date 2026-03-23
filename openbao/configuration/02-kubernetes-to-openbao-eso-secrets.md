@@ -66,7 +66,7 @@ bao secrets enable -path=secret kv-v2
 Jeder Teilnehmer legt sein Secret unter seinem Clusternamen ab:
 
 ```bash
-bao kv put secret/$CLUSTER_NAME/mariadb root password="meinSuperGeheimesPasswort"
+bao kv put secret/$CLUSTER_NAME/mariadb root-password="meinSuperGeheimesPasswort"
 ```
 
 Kontrolle:
