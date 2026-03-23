@@ -110,7 +110,7 @@ bao policy write admin-policy admin-policy.hcl
 
 ```bash
 TEMP_PW=$(openssl rand -base64 16)
-bao write auth/userpass/users/jochen \
+bao write auth/userpass/users/admin \
     password="$TEMP_PW" \
     token_ttl="1h" \
     token_max_ttl="4h"
@@ -137,7 +137,7 @@ Den `accessor` Wert von `userpass/` notieren (z.B. `auth_userpass_abc123`).
 ## 7. Entity für den User anlegen
 
 ```bash
-bao write identity/entity name="jochen"
+bao write identity/entity name="admin"
 ```
 
 Die `id` aus der Ausgabe notieren.
@@ -150,7 +150,7 @@ Verbindet die Entity mit dem Userpass-Account:
 
 ```bash
 bao write identity/entity-alias \
-    name="jochen" \
+    name="admin" \
     canonical_id="<ENTITY_ID>" \
     mount_accessor="<USERPASS_ACCESSOR>"
 ```
@@ -169,7 +169,7 @@ Mehrere User kommasepariert: `member_entity_ids="id1,id2,id3"`
 ## 10. Login testen
 
 ```bash
-bao login -method=userpass username=jochen
+bao login -method=userpass username=admin
 ```
 
  * Password aus 4. verwenden 
