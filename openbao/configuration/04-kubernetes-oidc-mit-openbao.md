@@ -80,9 +80,18 @@ bao login -method=userpass username=admin
 ## Schritt 2: OIDC Key erstellen
 
 Jeder Teilnehmer erstellt seinen eigenen Signing Key:
+Das ist das private/public key - Schlüsselpaar 
+(zum Signieren / Validieren)
+
 
 ```bash
-bao write identity/oidc/key/keyXX \
+# das musst du ändern
+TN=1
+```
+
+
+```bash
+bao write identity/oidc/key/key-tln$TN \
   allowed_client_ids="*" \
   rotation_period="24h" \
   verification_ttl="24h" \
@@ -93,11 +102,13 @@ bao write identity/oidc/key/keyXX \
 
 ## Schritt 3: OIDC Scope definieren
 
+
+
 Damit der kube-apiserver einen brauchbaren Username aus dem ID Token lesen kann, definieren wir einen Scope mit einem `username`-Claim:
 
 ```bash
 bao write identity/oidc/scope/user \
-  template='{"username":"{{identity.entity.name}}"}'
+  template='{"username":{{identity.entity.name}}}'
 ```
 
 > **Hinweis:** Dieser Scope ist für alle Teilnehmer identisch — `{{identity.entity.name}}` wird erst zur Laufzeit pro User aufgelöst. Falls ein anderer Teilnehmer den Scope schon angelegt hat, überschreibt der Befehl ihn mit dem gleichen Inhalt.
@@ -132,6 +143,7 @@ bao write identity/oidc/scope/user \
 > ```
 >
 > In Schritt 6 sagen wir dem kube-apiserver dann `--oidc-username-claim=username`, und Kubernetes sieht den User als `oidc:tln1`.
+> (jedes Feld ist ein claim, so auch username, ein zusätzliches Feld)
 >
 > **Zusammenhang der Teile:**
 > - **Scope-Template** → Steuert, welche Extra-Claims im Token landen
