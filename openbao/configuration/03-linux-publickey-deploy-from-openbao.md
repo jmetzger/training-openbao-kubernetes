@@ -143,6 +143,11 @@ bao token create \
   -display-name="bootstrap-webserver-neu"
 ```
 
+```
+# token aus Zeile token in Clipboard speichern
+```
+
+
 ---
 
 ## 5. Bootstrap-Script: Deployment auf dem Zielrechner
