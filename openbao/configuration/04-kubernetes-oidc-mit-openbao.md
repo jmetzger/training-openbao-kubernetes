@@ -32,7 +32,7 @@ Logge dich mit deinem Admin-Token bei OpenBao ein:
 
 ```bash
 export BAO_ADDR="https://openbao.jmetzger.do.t3isp.de"
-bao login <DEIN_ADMIN_TOKEN>
+bao login -method=userpass username=admin
 ```
 
 Aktiviere die Userpass-Auth-Methode (falls noch nicht geschehen – ignoriere den Fehler, falls sie schon aktiv ist):
@@ -43,14 +43,19 @@ bao auth enable userpass 2>/dev/null || echo "userpass bereits aktiviert"
 
 Erstelle deinen persönlichen User:
 
+```
+# Anpassen
+TN=1
+```
+
 ```bash
-bao write auth/userpass/users/tlnXX password="training"
+bao write auth/userpass/users/tln$TN password="training"
 ```
 
 **Wichtig:** Logge dich einmal als dein User ein, damit OpenBao eine Identity-Entity anlegt. Ohne Entity funktioniert OIDC nicht:
 
 ```bash
-bao login -method=userpass username=tlnXX password="training"
+bao login -method=userpass username=tln$TN password="training"
 ```
 
 Notiere dir die Entity-ID aus dem Login-Output (Feld `entity_id`). Falls du sie verpasst hast:
@@ -67,7 +72,7 @@ bao token lookup -format=json | jq -r '.data.entity_id'
 Logge dich danach wieder als Admin ein:
 
 ```bash
-bao login <DEIN_ADMIN_TOKEN>
+bao login -method=userpass username=admin
 ```
 
 ---
