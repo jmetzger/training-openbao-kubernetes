@@ -35,7 +35,10 @@ secret/ssh-groups/dbservers      ← Gruppe: members = "tln1,tln2"
 ```bash
 export BAO_ADDR="https://openbao.jmetzger.do.t3isp.de:8200"
 
-bao login -method=userpass username=tln<tln-nr>
+# passwort findest du hier für diesen user (für das training)
+# Ansonsten bitte nich speichern
+# cat /tmp/bao.json 
+bao login -method=userpass username=admin 
 ```
 
 ---
