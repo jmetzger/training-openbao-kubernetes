@@ -154,13 +154,22 @@ bao write identity/oidc/scope/user \
 
 ## Schritt 4: OIDC Client registrieren
 
-Der OIDC Client repräsentiert dein Kubernetes-Cluster als "Relying Party":
+>Was ist ein OIDC Client / Relying Party?
+>Eine Applikation, die bei OpenBao registriert ist und sagt: "Ich darf den >OIDC-Login-Flow nutzen." Dazu bekommt sie eine client_id und ein >client_secret.
+
+```
+http://localhost:8000/callback 
+Das ist die Adresse, an die OpenBao den Browser nach dem Login zurückschickt — und zwar mit dem Authorization Code.
+
+Warum localhost?
+Weil kubelogin auf dem Rechner des Users läuft. Es gibt keinen externen Server — kubelogin startet kurz einen eigenen Webserver, fängt den Callback ab, und macht ihn wieder zu.
+```
 
 ```bash
-bao write identity/oidc/client/kubernetesXX \
+bao write identity/oidc/client/kubernetes-tln$TN \
   redirect_uris="http://localhost:8000/callback" \
   assignments="allow_all" \
-  key="keyXX" \
+  key="key-tln$TN" \
   id_token_ttl="1h" \
   access_token_ttl="1h"
 ```
