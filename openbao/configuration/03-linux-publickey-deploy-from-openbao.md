@@ -4,12 +4,31 @@
 
 ![](/images/public-keys-deploy-linux-openbao.svg)
 
-## Voraussetzung: kv2 muss aktiviert sein 
+## Voraussetzung: 
+
+  * kv2 muss aktiviert sein (secret engine)
 
 ```
 # Falls nicht....
 bao secrets enable -path=secret kv-v2
 ```
+
+  * bao client muss installiert sein
+
+## Bash completion aktivieren 
+
+```
+# Anpassen (jeder Teilnehmer)
+TN=1
+```
+
+
+```
+bao -autocomplete-install
+# shell muss 1x neu geladen werden danach
+su -  tln$TN 
+```
+
 
 
 ## Szenario
@@ -170,7 +189,7 @@ cat > bootstrap-ssh.sh << 'SCRIPT'
 set -euo pipefail
 
 ### --- Konfiguration ---
-BAO_ADDR="https://openbao.jmetzger.do.t3isp.de:8200"
+BAO_ADDR="https://openbao.jmetzger.do.t3isp.de"
 : "${BAO_TOKEN:?Fehler: BAO_TOKEN ist nicht gesetzt. Export: export BAO_TOKEN=hvs.xxx}"
 GROUP="${1:?Usage: $0 <GRUPPENNAME> [TARGET_USER]}"
 TARGET_USER="${2:-$(whoami)}"
@@ -276,7 +295,7 @@ ssh -i ~/.ssh/id_training tln<tln-nr>@linux-server.do.t3isp.de
   hosts: all
   become: true
   vars:
-    bao_addr: "https://openbao.jmetzger.do.t3isp.de:8200"
+    bao_addr: "https://openbao.jmetzger.do.t3isp.de"
     group: "webservers"
     target_user: "root"
 
@@ -329,7 +348,7 @@ ssh -i ~/.ssh/id_training tln<tln-nr>@linux-server.do.t3isp.de
 # cloud-init User Data - Alle Keys einer OpenBao-Gruppe deployen
 set -euo pipefail
 
-BAO_ADDR="https://openbao.jmetzger.do.t3isp.de:8200"
+BAO_ADDR="https://openbao.jmetzger.do.t3isp.de"
 BAO_TOKEN="hvs.CAESIGxyz_EINMAL_TOKEN_HIER"
 GROUP="webservers"
 TARGET_USER="root"
