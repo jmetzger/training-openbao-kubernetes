@@ -117,10 +117,12 @@ storage "raft" {
 
 listener "tcp" {
 # IP festlegen, auf dem die API lauschen soll
-#  address     = "127.0.0.1:8200"
-#  address     = "10.135.0.2:8200"
-# Alle Interfaces 
-  address      = "0.0.0.0:8200"
+# Zugriff von aussen erfolgt über nginx
+# Hier muss dann bei bao_addr im
+# http://openbao.jmetzger.do.t3isp.de (ohne port angegeben werden
+# Weil es intern auf 127.0.0.1:8200 weiterleitet, dort läuft auch die gui
+  address     = "127.0.0.1:8200"
+
   cluster_address = "10.135.0.5:8201"
   tls_disable = 1
 }
