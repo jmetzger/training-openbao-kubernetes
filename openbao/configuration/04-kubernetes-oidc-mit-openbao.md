@@ -234,12 +234,13 @@ nano /etc/kubernetes/manifests/kube-apiserver.yaml
 ```
 
 Ergänze unter `spec.containers[0].command`:
+(unbedingt doppelte Hochkommas)
 
 ```yaml
-    - --oidc-issuer-url=https://openbao.jmetzger.do.t3isp.de/v1/identity/oidc/provider/provider-tln$TN
-    - --oidc-client-id=CLIENT_ID
-    - --oidc-username-claim=username
-    - --oidc-username-prefix=oidc:
+    - "--oidc-issuer-url=https://openbao.jmetzger.do.t3isp.de/v1/identity/oidc/provider/provider-tln<tln-nr>"
+    - "--oidc-client-id=CLIENT_ID"
+    - "--oidc-username-claim=username"
+    - "--oidc-username-prefix=oidc:"
 ```
 
 > **Wichtig:**
