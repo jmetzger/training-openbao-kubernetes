@@ -177,7 +177,7 @@ bao write identity/oidc/client/kubernetes-tln$TN \
 Client-Credentials auslesen und notieren:
 
 ```bash
-bao read identity/oidc/client/kubernetesXX
+bao read identity/oidc/client/kubernetes-tln$TN
 ```
 
 ```bash
@@ -193,15 +193,15 @@ bao read identity/oidc/client/kubernetesXX
 Jeder Teilnehmer erstellt seinen eigenen Provider:
 
 ```bash
-bao write identity/oidc/provider/providerXX \
-  allowed_client_ids="$(bao read -field=client_id identity/oidc/client/kubernetesXX)" \
+bao write identity/oidc/provider/provider-tln$TN \
+  allowed_client_ids="$(bao read -field=client_id identity/oidc/client/kubernetes-tln$TN)" \
   scopes_supported="user"
 ```
 
 Teste, ob der Discovery-Endpoint erreichbar ist:
 
 ```bash
-curl -s $BAO_ADDR/v1/identity/oidc/provider/providerXX/.well-known/openid-configuration | jq .
+curl -s $BAO_ADDR/v1/identity/oidc/provider/provider-tln$TN/.well-known/openid-configuration | jq .
 ```
 
 Du solltest ein JSON mit `issuer`, `authorization_endpoint`, `token_endpoint` etc. sehen.
@@ -213,7 +213,16 @@ Du solltest ein JSON mit `issuer`, `authorization_endpoint`, `token_endpoint` et
 Jetzt wechseln wir zum Kubernetes-Cluster. Verbinde dich per SSH auf die Control Plane Node:
 
 ```bash
-ssh root@DEINE_CONTROL_PLANE_NODE
+# ip - adresse raussuchen, das ist auch die des Control Planes 
+kubectl cluster-info 
+ssh 11trainingdo@<ip-der-control-plane>
+# zum Root-Nutzer wechseln 
+sudo su -
+```
+
+```
+# Anpassen für jeden Benutzer
+TN=1
 ```
 
 ### 6a: kube-apiserver-Manifest editieren
@@ -221,13 +230,13 @@ ssh root@DEINE_CONTROL_PLANE_NODE
 Bearbeite `/etc/kubernetes/manifests/kube-apiserver.yaml` und füge folgende Flags zum `command`-Block hinzu:
 
 ```bash
-vi /etc/kubernetes/manifests/kube-apiserver.yaml
+nano /etc/kubernetes/manifests/kube-apiserver.yaml
 ```
 
 Ergänze unter `spec.containers[0].command`:
 
 ```yaml
-    - --oidc-issuer-url=https://openbao.jmetzger.do.t3isp.de/v1/identity/oidc/provider/providerXX
+    - --oidc-issuer-url=https://openbao.jmetzger.do.t3isp.de/v1/identity/oidc/provider/provider-tln$TN
     - --oidc-client-id=CLIENT_ID
     - --oidc-username-claim=username
     - --oidc-username-prefix=oidc:
