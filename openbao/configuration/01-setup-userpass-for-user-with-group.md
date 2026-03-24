@@ -52,6 +52,17 @@ path "secret/*" {
   capabilities = ["create", "read", "update", "delete", "list"]
 }
 
+# Das ist wichtig, weil wir nach beim token erstellen, hier diesen Pfad brauchen und, wenn wir nicht Schreibrechte hier haben, haben wir nachher nur Leserechte
+# Explizit: volle Rechte auf ssh-Pfade (überstimmt ssh-group-readonly)
+path "secret/data/ssh/*" {
+  capabilities = ["create", "read", "update", "delete", "list"]
+}
+path "secret/data/ssh-groups/*" {
+  capabilities = ["create", "read", "update", "delete", "list"]
+}
+
+
+
 # Policies verwalten
 path "sys/policies/*" {
   capabilities = ["create", "read", "update", "delete", "list"]
