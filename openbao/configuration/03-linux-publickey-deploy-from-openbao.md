@@ -47,21 +47,28 @@ bao login -method=userpass username=admin
 
 Jeder Teilnehmer:
 
+```
+# das muss do anpassen 
+TN=1
+```
+
 ```bash
 # Schlüsselpaar erzeugen
-ssh-keygen -t ed25519 -C "tln<tln-nr>@training" -f ~/.ssh/id_training -N ""
+ssh-keygen -t ed25519 -C "tln$TN@training" -f ~/.ssh/id_training -N ""
+```
 
+```
 # Public Key in OpenBao ablegen
-bao kv put secret/ssh/tln<tln-nr> \
+bao kv put secret/ssh/tln$TN \
   public_key=@$HOME/.ssh/id_training.pub \
-  owner="tln<tln-nr>" \
+  owner="tln$TN" \
   created="$(date -I)"
 ```
 
 ### Prüfen
 
 ```bash
-bao kv get -field=public_key secret/ssh/tln<tln-nr>
+bao kv get -field=public_key secret/ssh/tln$TN
 ```
 
 ---
@@ -101,6 +108,24 @@ path "secret/data/ssh-groups/*" {
   capabilities = ["read"]
 }
 EOF
+```
+
+```
+# ich muss mir selbst diese policy als admin noch zuweisen,
+# cat /tmp/bao.json  <- hier steht auch das root-token 
+# das geht nur als root
+bao login
+# Welche policies habe ich aktuell 
+# default 
+bao token lookup
+# policies hinzufügen
+bao write auth/userpass/users/admin policies="default,ssh-group-readonly" 
+```
+
+```
+# Jetzt wieder als normaler Benutzer anmelden
+# cat /tmp/bao.json # hier ist das passwort fürs Training 
+bao login -method=userpass username=admin
 ```
 
 ---
