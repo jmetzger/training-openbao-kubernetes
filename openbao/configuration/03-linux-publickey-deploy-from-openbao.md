@@ -4,6 +4,14 @@
 
 ![](/images/public-keys-deploy-linux-openbao.svg)
 
+## Voraussetzung: kv2 muss aktiviert sein 
+
+```
+# Falls nicht....
+bao secrets enable -path=secret kv-v2
+```
+
+
 ## Szenario
 
 Jeder Teilnehmer speichert seinen SSH Public Key in OpenBao. Über **Servergruppen** wird definiert, welche Teilnehmer Zugriff auf welche Server bekommen. Beim Ausrollen eines neuen Servers werden automatisch alle Public Keys der Gruppenmitglieder deployed.
