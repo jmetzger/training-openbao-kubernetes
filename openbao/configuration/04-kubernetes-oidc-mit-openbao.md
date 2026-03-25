@@ -344,6 +344,7 @@ kubectl oidc-login setup \
   --oidc-client-id=$CLIENT_ID \
   --oidc-client-secret=$CLIENT_SECRET \
   --grant-type=authcode-keyboard
+  --oidc-redirect-url=urn:ietf:wg:oauth:2.0:oob
 
 ```
 
