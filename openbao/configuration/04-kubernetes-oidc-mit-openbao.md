@@ -350,6 +350,42 @@ kubectl oidc-login setup \
 
 Der Browser öffnet sich, du loggst dich mit `tlnXX` / `training` ein. Danach zeigt kubelogin die Claims des ID Tokens an. Prüfe, ob der `username`-Claim korrekt ist.
 
+### 8d: Preisfrage: Ist der Claim -> username mit drin bei der Ausgabe
+
+  * Hier das Ergebnis aus 8c
+
+<img width="146" height="385" alt="image" src="https://github.com/user-attachments/assets/f4aacd9c-3239-4d36-9cde-8fc7ad0610b7" />
+
+  * Username: fehlt
+  * Er zwar eingetragen auf openbao - Seite, dass ich ihn abfragen kann, ich muss aber auch tun !!!
+  * ** Kubernetes braucht den username (im scope user), um zu wissen, wer anfragt -> um ihm die Rollen zu geben ** 
+
+
+### 8e: Die korrekte Abfrage: Jetzt mit username 
+
+```
+# Variante 1: callback über localhost:8000 nach Erfolg
+# !!! Nehmen wir nicht 
+kubectl oidc-login setup \
+  --oidc-issuer-url=https://openbao.jmetzger.do.t3isp.de/v1/identity/oidc/provider/provider-tln$TN\
+  --oidc-client-id=$CLIENT_ID \
+  --oidc-client-secret=$CLIENT_SECRET
+  --oidc-extra-scope=user
+```
+
+```
+# Variante 2: Nehmen wir, kann mich über Browser einloggen
+kubectl oidc-login setup \
+  --oidc-issuer-url=https://openbao.jmetzger.do.t3isp.de/v1/identity/oidc/provider/provider-tln$TN\
+  --oidc-client-id=$CLIENT_ID \
+  --oidc-client-secret=$CLIENT_SECRET \
+  --grant-type=authcode-keyboard \
+  --oidc-redirect-url=urn:ietf:wg:oauth:2.0:oob
+  --oidc-extra-scope=user
+
+```
+
+
 ### 8c: kubeconfig einrichten
 
 ```bash
