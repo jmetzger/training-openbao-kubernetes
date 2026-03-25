@@ -319,11 +319,18 @@ Teste den OIDC-Flow einmal manuell:
 ```bash
 bao read identity/oidc/client/kubernetes-tln$TN
 ```
+
+```
+CLIENT_ID=<eintragen>
+CLIENT_SECRET=<eintragen>
+```
+
+
 ```
 kubectl oidc-login setup \
   --oidc-issuer-url=https://openbao.jmetzger.do.t3isp.de/v1/identity/oidc/provider/providerXX \
-  --oidc-client-id=CLIENT_ID \
-  --oidc-client-secret=CLIENT_SECRET
+  --oidc-client-id=$CLIENT_ID \
+  --oidc-client-secret=$CLIENT_SECRET
 ```
 
 Der Browser öffnet sich, du loggst dich mit `tlnXX` / `training` ein. Danach zeigt kubelogin die Claims des ID Tokens an. Prüfe, ob der `username`-Claim korrekt ist.
