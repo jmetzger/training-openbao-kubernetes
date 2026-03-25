@@ -404,26 +404,29 @@ kubectl oidc-login setup \
 ```
 
 
-### 8c: kubeconfig einrichten
+### 8f: kubeconfig einrichten
 
-```bash
-# Neuen User in kubeconfig anlegen
-kubectl config set-credentials oidc-tlnXX \
-  --exec-api-version=client.authentication.k8s.io/v1 \
-  --exec-command=kubectl \
-  --exec-arg=oidc-login \
-  --exec-arg=get-token \
-  --exec-arg=--oidc-issuer-url=https://openbao.jmetzger.do.t3isp.de/v1/identity/oidc/provider/providerXX \
-  --exec-arg=--oidc-client-id=$CLIENT_ID \
-  --exec-arg=--oidc-client-secret=$CLIENT_SECRET
+  * Ausgabe aus 8e kopieren (dort sind die ganzen Befehle korrekt drin)
 
+<img width="956" height="373" alt="image" src="https://github.com/user-attachments/assets/c1fc356b-a2a7-46ff-af76-b4fb5eb9acc3" />
+
+  * Wichtig: zusätzlich ->
+
+```
+## Muss drin, sein, sonst wartet er nicht auf die Eingabe vom Code 
+kubectl config set-credentials oidc --exec-interactive-mode=IfAvailable
+```
+
+```
 # Neuen Context anlegen
-kubectl config set-context oidc \
+kubectl config set-context oidc-context \
   --cluster=$(kubectl config view -o jsonpath='{.clusters[0].name}') \
-  --user=oidc-tlnXX
+  --user=oidc
+```
 
+```
 # Context wechseln
-kubectl config use-context oidc
+kubectl config use-context oidc-context
 ```
 
 ---
