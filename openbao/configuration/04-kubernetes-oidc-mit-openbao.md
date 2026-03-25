@@ -359,8 +359,8 @@ kubectl config set-credentials oidc-tlnXX \
   --exec-arg=oidc-login \
   --exec-arg=get-token \
   --exec-arg=--oidc-issuer-url=https://openbao.jmetzger.do.t3isp.de/v1/identity/oidc/provider/providerXX \
-  --exec-arg=--oidc-client-id=CLIENT_ID \
-  --exec-arg=--oidc-client-secret=CLIENT_SECRET
+  --exec-arg=--oidc-client-id=$CLIENT_ID \
+  --exec-arg=--oidc-client-secret=$CLIENT_SECRET
 
 # Neuen Context anlegen
 kubectl config set-context oidc \
