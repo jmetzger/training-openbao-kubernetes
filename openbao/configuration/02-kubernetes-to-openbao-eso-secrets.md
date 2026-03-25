@@ -298,12 +298,8 @@ kubectl describe secretstore openbao-backend
 
 Das ExternalSecret definiert, welches Secret aus OpenBao geholt und wie das resultierende Kubernetes Secret aussehen soll.
 
-```bash
-nano external-secret.yaml
 ```
-
-```yaml
-# external-secret.yaml
+cat <<EOF > external-secret.yaml
 apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
@@ -320,11 +316,12 @@ spec:
   data:
     - secretKey: root-password
       remoteRef:
-        key: <cluster-name>/mariadb
+        key: ${CLUSTER_NAME}/mariadb
         property: root-password
+EOF
 ```
 
-```bash
+```
 kubectl apply -f external-secret.yaml
 ```
 
