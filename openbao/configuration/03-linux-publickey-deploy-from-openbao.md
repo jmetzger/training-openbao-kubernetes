@@ -187,7 +187,7 @@ TARGET_USER="${2:-$(whoami)}"
 ### --- Setup ---
 export BAO_ADDR
 
-SSH_DIR="/home/${TARGET_USER}/.ssh"
+SSH_DIR="${HOME}/.ssh"
 AUTH_KEYS="${SSH_DIR}/authorized_keys"
 BEGIN_MARKER="# --- BEGIN OPENBAO MANAGED ---"
 END_MARKER="# --- END OPENBAO MANAGED ---"
@@ -247,72 +247,6 @@ else
 fi
 
 echo "Gesamt: $(grep -c '' "$AUTH_KEYS") Zeile(n) in ${AUTH_KEYS}"
-
-unset BAO_TOKEN
-SCRIPT
-```
-
-
-
-**Schritt 2: Bootstrap-Script anlegen**
-
-```bash
-cat > bootstrap-ssh.sh << 'SCRIPT'
-#!/bin/bash
-set -euo pipefail
-
-### --- Konfiguration ---
-BAO_ADDR="https://openbao.jmetzger.do.t3isp.de"
-: "${BAO_TOKEN:?Fehler: BAO_TOKEN ist nicht gesetzt. Export: export BAO_TOKEN=hvs.xxx}"
-GROUP="${1:?Usage: $0 <GRUPPENNAME> [TARGET_USER]}"
-TARGET_USER="${2:-$(whoami)}"
-
-### --- Setup ---
-export BAO_ADDR
-
-SSH_DIR="/home/${TARGET_USER}/.ssh"
-AUTH_KEYS="${SSH_DIR}/authorized_keys"
-
-mkdir -p "$SSH_DIR"
-chmod 700 "$SSH_DIR"
-touch "$AUTH_KEYS"
-
-### --- Gruppenmitglieder aus OpenBao lesen ---
-echo "Lese Gruppe: ${GROUP} ..."
-MEMBERS=$(bao kv get -field=members "secret/ssh-groups/${GROUP}") || {
-  echo "FEHLER: Gruppe '${GROUP}' nicht gefunden!"
-  exit 1
-}
-
-echo "Mitglieder: ${MEMBERS}"
-
-### --- Keys aller Mitglieder holen ---
-ADDED=0
-IFS=',' read -ra MEMBER_LIST <<< "$MEMBERS"
-
-for MEMBER in "${MEMBER_LIST[@]}"; do
-  MEMBER=$(echo "$MEMBER" | xargs)
-  echo "Hole Key von ${MEMBER} ..."
-
-  PUBLIC_KEY=$(bao kv get -field=public_key "secret/ssh/${MEMBER}" 2>/dev/null) || {
-    echo "  WARN: Key für ${MEMBER} nicht gefunden, überspringe."
-    continue
-  }
-
-  if ! grep -qF "$PUBLIC_KEY" "$AUTH_KEYS"; then
-    echo "$PUBLIC_KEY" >> "$AUTH_KEYS"
-    echo "  -> hinzugefügt"
-    ((ADDED++))
-  else
-    echo "  -> bereits vorhanden"
-  fi
-done
-
-chmod 600 "$AUTH_KEYS"
-
-echo ""
-echo "Fertig. ${ADDED} neue Keys hinzugefügt."
-echo "Gesamt: $(grep -c '' "$AUTH_KEYS") Key(s) in ${AUTH_KEYS}"
 
 unset BAO_TOKEN
 SCRIPT
@@ -424,33 +358,74 @@ set -euo pipefail
 BAO_ADDR="https://openbao.jmetzger.do.t3isp.de"
 BAO_TOKEN="hvs.CAESIGxyz_EINMAL_TOKEN_HIER"
 GROUP="webservers"
-TARGET_USER="root"
 
-SSH_DIR="/root/.ssh"
+### --- Setup ---
+export BAO_ADDR
+
+SSH_DIR="${HOME}/.ssh"
 AUTH_KEYS="${SSH_DIR}/authorized_keys"
-mkdir -p "$SSH_DIR" && chmod 700 "$SSH_DIR"
+BEGIN_MARKER="# --- BEGIN OPENBAO MANAGED ---"
+END_MARKER="# --- END OPENBAO MANAGED ---"
 
-# Schritt 1: Mitgliederliste der Gruppe holen
-MEMBERS=$(curl -sf \
-  -H "X-Vault-Token: ${BAO_TOKEN}" \
-  "${BAO_ADDR}/v1/secret/data/ssh-groups/${GROUP}" \
-  | jq -r '.data.data.members')
+mkdir -p "$SSH_DIR"
+chmod 700 "$SSH_DIR"
+touch "$AUTH_KEYS"
 
-# Schritt 2: Keys aller Mitglieder holen
+### --- Gruppenmitglieder aus OpenBao lesen ---
+echo "Lese Gruppe: ${GROUP} ..."
+MEMBERS=$(bao kv get -field=members "secret/ssh-groups/${GROUP}") || {
+  echo "FEHLER: Gruppe '${GROUP}' nicht gefunden!"
+  exit 1
+}
+
+echo "Mitglieder: ${MEMBERS}"
+
+### --- Keys aller Mitglieder holen ---
+ADDED=0
+TMPFILE=$(mktemp)
 IFS=',' read -ra MEMBER_LIST <<< "$MEMBERS"
+
 for MEMBER in "${MEMBER_LIST[@]}"; do
   MEMBER=$(echo "$MEMBER" | xargs)
-  PUBLIC_KEY=$(curl -sf \
-    -H "X-Vault-Token: ${BAO_TOKEN}" \
-    "${BAO_ADDR}/v1/secret/data/ssh/${MEMBER}" \
-    | jq -r '.data.data.public_key') || continue
+  echo "Hole Key von ${MEMBER} ..."
 
-  grep -qF "$PUBLIC_KEY" "$AUTH_KEYS" 2>/dev/null || echo "$PUBLIC_KEY" >> "$AUTH_KEYS"
+  PUBLIC_KEY=$(bao kv get -field=public_key "secret/ssh/${MEMBER}" 2>/dev/null | xargs) || {
+    echo "  WARN: Key für ${MEMBER} nicht gefunden, überspringe."
+    continue
+  }
+
+  echo "$PUBLIC_KEY" >> "$TMPFILE"
+  echo "  -> geholt"
+  ((ADDED++))
 done
 
-chmod 600 "$AUTH_KEYS"
-echo "SSH-Keys der Gruppe ${GROUP} deployed (${#MEMBER_LIST[@]} Mitglieder)." | logger -t bootstrap-ssh
+### --- Prüfen ob Änderungen nötig ---
+CURRENT=$(sed -n "/${BEGIN_MARKER}/,/${END_MARKER}/{/${BEGIN_MARKER}/d;/${END_MARKER}/d;p}" "$AUTH_KEYS" 2>/dev/null || true)
+NEW=$(cat "$TMPFILE")
+
+if [ "$CURRENT" = "$NEW" ]; then
+  echo ""
+  echo "Keine Änderungen, authorized_keys bleibt unverändert."
+  rm -f "$TMPFILE"
+else
+  echo ""
+  echo "Änderungen erkannt, aktualisiere authorized_keys ..."
+  sed -i "/${BEGIN_MARKER}/,/${END_MARKER}/d" "$AUTH_KEYS"
+  {
+    echo "$BEGIN_MARKER"
+    cat "$TMPFILE"
+    echo "$END_MARKER"
+  } >> "$AUTH_KEYS"
+  rm -f "$TMPFILE"
+  chmod 600 "$AUTH_KEYS"
+  echo "Fertig. ${ADDED} Keys aus OpenBao geschrieben."
+fi
+
+echo "Gesamt: $(grep -c '' "$AUTH_KEYS") Zeile(n) in ${AUTH_KEYS}"
+
+unset BAO_TOKEN
 ```
+
 
 ---
 
