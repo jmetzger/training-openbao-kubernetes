@@ -111,6 +111,24 @@ bao write identity/oidc/scope/user \
   template='{"username":{{identity.entity.name}}}'
 ```
 
+```bash
+# hier finden wir auch den accessor von userpass
+bau auth list
+```
+
+```
+for id in $(bao list -format=json identity/entity/id | jq -r '.[]'); do
+  echo "=== $id ==="
+  bao read -format=json identity/entity/id/$id | jq '.data.aliases'
+done
+```
+
+```
+bao write identity/oidc/scope/user \
+  template='{"username":{{identity.entity.aliases.'$(bao auth list -format=json | jq -r '.["userpass/"].accessor')'.name}}}'
+```
+
+
 > **Hinweis:** Dieser Scope ist für alle Teilnehmer identisch — `{{identity.entity.name}}` wird erst zur Laufzeit pro User aufgelöst. Falls ein anderer Teilnehmer den Scope schon angelegt hat, überschreibt der Befehl ihn mit dem gleichen Inhalt.
 
 > **Hintergrund: Warum brauchen wir einen Scope?**
@@ -369,7 +387,7 @@ Der Browser öffnet sich, du loggst dich mit `tlnXX` / `training` ein. Danach ze
 kubectl oidc-login setup \
   --oidc-issuer-url=https://openbao.jmetzger.do.t3isp.de/v1/identity/oidc/provider/provider-tln$TN\
   --oidc-client-id=$CLIENT_ID \
-  --oidc-client-secret=$CLIENT_SECRET
+  --oidc-client-secret=$CLIENT_SECRET \
   --oidc-extra-scope=user
 ```
 
@@ -380,7 +398,7 @@ kubectl oidc-login setup \
   --oidc-client-id=$CLIENT_ID \
   --oidc-client-secret=$CLIENT_SECRET \
   --grant-type=authcode-keyboard \
-  --oidc-redirect-url=urn:ietf:wg:oauth:2.0:oob
+  --oidc-redirect-url=urn:ietf:wg:oauth:2.0:oob \
   --oidc-extra-scope=user
 
 ```
