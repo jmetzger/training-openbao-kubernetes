@@ -177,7 +177,6 @@ ssh tln<tln-nr>@linux-server.do.t3isp.de
 ```bash
 cat > bootstrap-ssh.sh << 'SCRIPT'
 #!/bin/bash
-set -euo pipefail
 
 ### --- Konfiguration ---
 BAO_ADDR="https://openbao.jmetzger.do.t3isp.de"
