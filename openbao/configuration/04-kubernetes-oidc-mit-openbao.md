@@ -166,8 +166,10 @@ Weil kubelogin auf dem Rechner des Users läuft. Es gibt keinen externen Server 
 ```
 
 ```bash
+# localhost:8000 erlauben aber auch Zugriff über Browser von extern
+# andere Maschine als kommandozeile mit kubectl 
 bao write identity/oidc/client/kubernetes-tln$TN \
-  redirect_uris="http://localhost:8000/callback" \
+  redirect_uris="http://localhost:8000/callback,urn:ietf:wg:oauth:2.0:oob" \
   assignments="allow_all" \
   key="key-tln$TN" \
   id_token_ttl="1h" \
@@ -328,7 +330,7 @@ CLIENT_SECRET=<eintragen>
 
 ```
 kubectl oidc-login setup \
-  --oidc-issuer-url=https://openbao.jmetzger.do.t3isp.de/v1/identity/oidc/provider/providerXX \
+  --oidc-issuer-url=https://openbao.jmetzger.do.t3isp.de/v1/identity/oidc/provider/provider-tln$TN\
   --oidc-client-id=$CLIENT_ID \
   --oidc-client-secret=$CLIENT_SECRET
 ```
