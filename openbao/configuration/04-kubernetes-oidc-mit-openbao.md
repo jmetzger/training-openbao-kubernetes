@@ -343,7 +343,7 @@ kubectl oidc-login setup \
   --oidc-issuer-url=https://openbao.jmetzger.do.t3isp.de/v1/identity/oidc/provider/provider-tln$TN\
   --oidc-client-id=$CLIENT_ID \
   --oidc-client-secret=$CLIENT_SECRET \
-  --grant-type=authcode-keyboard
+  --grant-type=authcode-keyboard \
   --oidc-redirect-url=urn:ietf:wg:oauth:2.0:oob
 
 ```
