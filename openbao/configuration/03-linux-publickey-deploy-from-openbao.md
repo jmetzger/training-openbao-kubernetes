@@ -172,6 +172,89 @@ Das Script liest die Mitgliederliste einer Gruppe aus OpenBao und deployed alle 
 ssh tln<tln-nr>@linux-server.do.t3isp.de
 ```
 
+**Schritt 2 (v2): Bootstrap-Script anlegen**
+
+```bash
+cat > bootstrap-ssh.sh << 'SCRIPT'
+#!/bin/bash
+set -euo pipefail
+
+### --- Konfiguration ---
+BAO_ADDR="https://openbao.jmetzger.do.t3isp.de"
+: "${BAO_TOKEN:?Fehler: BAO_TOKEN ist nicht gesetzt. Export: export BAO_TOKEN=hvs.xxx}"
+GROUP="${1:?Usage: $0 <GRUPPENNAME> [TARGET_USER]}"
+TARGET_USER="${2:-$(whoami)}"
+
+### --- Setup ---
+export BAO_ADDR
+
+SSH_DIR="/home/${TARGET_USER}/.ssh"
+AUTH_KEYS="${SSH_DIR}/authorized_keys"
+BEGIN_MARKER="# --- BEGIN OPENBAO MANAGED ---"
+END_MARKER="# --- END OPENBAO MANAGED ---"
+
+mkdir -p "$SSH_DIR"
+chmod 700 "$SSH_DIR"
+touch "$AUTH_KEYS"
+
+### --- Gruppenmitglieder aus OpenBao lesen ---
+echo "Lese Gruppe: ${GROUP} ..."
+MEMBERS=$(bao kv get -field=members "secret/ssh-groups/${GROUP}") || {
+  echo "FEHLER: Gruppe '${GROUP}' nicht gefunden!"
+  exit 1
+}
+
+echo "Mitglieder: ${MEMBERS}"
+
+### --- Keys aller Mitglieder holen ---
+ADDED=0
+TMPFILE=$(mktemp)
+IFS=',' read -ra MEMBER_LIST <<< "$MEMBERS"
+
+for MEMBER in "${MEMBER_LIST[@]}"; do
+  MEMBER=$(echo "$MEMBER" | xargs)
+  echo "Hole Key von ${MEMBER} ..."
+
+  PUBLIC_KEY=$(bao kv get -field=public_key "secret/ssh/${MEMBER}" 2>/dev/null | xargs) || {
+    echo "  WARN: Key für ${MEMBER} nicht gefunden, überspringe."
+    continue
+  }
+
+  echo "$PUBLIC_KEY" >> "$TMPFILE"
+  echo "  -> geholt"
+  ((ADDED++))
+done
+
+### --- Prüfen ob Änderungen nötig ---
+CURRENT=$(sed -n "/${BEGIN_MARKER}/,/${END_MARKER}/{/${BEGIN_MARKER}/d;/${END_MARKER}/d;p}" "$AUTH_KEYS" 2>/dev/null || true)
+NEW=$(cat "$TMPFILE")
+
+if [ "$CURRENT" = "$NEW" ]; then
+  echo ""
+  echo "Keine Änderungen, authorized_keys bleibt unverändert."
+  rm -f "$TMPFILE"
+else
+  echo ""
+  echo "Änderungen erkannt, aktualisiere authorized_keys ..."
+  sed -i "/${BEGIN_MARKER}/,/${END_MARKER}/d" "$AUTH_KEYS"
+  {
+    echo "$BEGIN_MARKER"
+    cat "$TMPFILE"
+    echo "$END_MARKER"
+  } >> "$AUTH_KEYS"
+  rm -f "$TMPFILE"
+  chmod 600 "$AUTH_KEYS"
+  echo "Fertig. ${ADDED} Keys aus OpenBao geschrieben."
+fi
+
+echo "Gesamt: $(grep -c '' "$AUTH_KEYS") Zeile(n) in ${AUTH_KEYS}"
+
+unset BAO_TOKEN
+SCRIPT
+```
+
+
+
 **Schritt 2: Bootstrap-Script anlegen**
 
 ```bash
