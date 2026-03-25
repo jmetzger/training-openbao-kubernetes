@@ -342,7 +342,7 @@ kubectl oidc-login setup \
 kubectl oidc-login setup \
   --oidc-issuer-url=https://openbao.jmetzger.do.t3isp.de/v1/identity/oidc/provider/provider-tln$TN\
   --oidc-client-id=$CLIENT_ID \
-  --oidc-client-secret=$CLIENT_SECRET
+  --oidc-client-secret=$CLIENT_SECRET \
   --grant-type=authcode-keyboard
 
 ```
