@@ -276,9 +276,9 @@ crictl logs $(crictl ps -a --name kube-apiserver -q | head -1)
 Zurück auf deinem Arbeitsrechner (mit kubeadm-Admin-Zugriff):
 
 ```bash
-kubectl create clusterrolebinding oidc-tlnXX \
+kubectl create clusterrolebinding oidc-tln$TN \
   --clusterrole=cluster-admin \
-  --user="oidc:tlnXX"
+  --user="oidc:tln$TN"
 ```
 
 > Der Username setzt sich zusammen aus dem Prefix `oidc:` (aus `--oidc-username-prefix`) und dem Wert des `username`-Claims im Token (`tlnXX`).
@@ -317,6 +317,9 @@ kubectl krew install oidc-login
 Teste den OIDC-Flow einmal manuell:
 
 ```bash
+bao read identity/oidc/client/kubernetes-tln$TN
+```
+```
 kubectl oidc-login setup \
   --oidc-issuer-url=https://openbao.jmetzger.do.t3isp.de/v1/identity/oidc/provider/providerXX \
   --oidc-client-id=CLIENT_ID \
