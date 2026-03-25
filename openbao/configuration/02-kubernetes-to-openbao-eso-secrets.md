@@ -292,6 +292,14 @@ kubectl describe secretstore openbao-backend
 
 <img width="1891" height="223" alt="image" src="https://github.com/user-attachments/assets/0bda3a09-2344-47fc-bf0c-2fd96c5d6008" />
 
+```
+bao auth list
+```
+
+<img width="1212" height="125" alt="image" src="https://github.com/user-attachments/assets/32c22686-b4f2-46b8-846a-c2dbd591382e" />
+
+
+
 ---
 
 ## Schritt 8: ExternalSecret erstellen
