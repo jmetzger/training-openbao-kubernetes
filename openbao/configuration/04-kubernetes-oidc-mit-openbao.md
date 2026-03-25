@@ -329,10 +329,22 @@ CLIENT_SECRET=<eintragen>
 
 
 ```
+# Variante 1: callback über localhost:8000 nach Erfolg
+# !!! Nehmen wir nicht 
 kubectl oidc-login setup \
   --oidc-issuer-url=https://openbao.jmetzger.do.t3isp.de/v1/identity/oidc/provider/provider-tln$TN\
   --oidc-client-id=$CLIENT_ID \
   --oidc-client-secret=$CLIENT_SECRET
+```
+
+```
+# Variante 2: Nehmen wir, kann mich über Browser einloggen
+kubectl oidc-login setup \
+  --oidc-issuer-url=https://openbao.jmetzger.do.t3isp.de/v1/identity/oidc/provider/provider-tln$TN\
+  --oidc-client-id=$CLIENT_ID \
+  --oidc-client-secret=$CLIENT_SECRET
+  --grant-type=authcode-keyboard
+
 ```
 
 Der Browser öffnet sich, du loggst dich mit `tlnXX` / `training` ein. Danach zeigt kubelogin die Claims des ID Tokens an. Prüfe, ob der `username`-Claim korrekt ist.
