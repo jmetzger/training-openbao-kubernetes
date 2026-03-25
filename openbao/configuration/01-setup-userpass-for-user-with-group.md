@@ -61,8 +61,6 @@ path "secret/data/ssh-groups/*" {
   capabilities = ["create", "read", "update", "delete", "list"]
 }
 
-
-
 # Policies verwalten
 path "sys/policies/*" {
   capabilities = ["create", "read", "update", "delete", "list"]
@@ -77,6 +75,12 @@ path "identity/*" {
 path "sys/mounts/*" {
   capabilities = ["create", "read", "update", "delete", "list"]
 }
+
+# Für top-level abfragen wie: bao auth list 
+path "sys/auth" {
+  capabilities = ["read", "list" ]
+}
+
 
 # Auth-Methoden mounten/verwalten
 # sudo ist hier als admin zwingend erforderlich 
