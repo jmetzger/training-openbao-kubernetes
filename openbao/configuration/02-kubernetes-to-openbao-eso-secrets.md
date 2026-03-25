@@ -398,7 +398,7 @@ kubectl get pods -l app=mariadb
 ### Env-Variable im Pod prüfen
 
 ```bash
-kubectl exec -it deploy/mariadb -- env | grep MARIADB_ROOT_PASSWORD
+kubectl exec deploy/mariadb -- env | grep MARIADB_ROOT_PASSWORD
 ```
 
 ### MariaDB-Login testen
