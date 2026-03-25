@@ -234,12 +234,8 @@ kubectl apply -f mariadb-sa.yaml
 
 Der SecretStore teilt ESO mit, wie es sich mit OpenBao verbinden und authentifizieren soll.
 
-```bash
-nano secret-store.yaml
 ```
-
-```yaml
-# secret-store.yaml
+cat <<EOF > secret-store.yaml
 apiVersion: external-secrets.io/v1
 kind: SecretStore
 metadata:
@@ -253,10 +249,11 @@ spec:
       version: "v2"
       auth:
         kubernetes:
-          mountPath: "kubernetes-<cluster-name>"
+          mountPath: "kubernetes-${CLUSTER_NAME}"
           role: "mariadb"
           serviceAccountRef:
             name: "mariadb-sa"
+EOF
 ```
 
 > Falls OpenBao ein selbstsigniertes Zertifikat nutzt, muss `spec.provider.vault.caProvider` konfiguriert werden (z.B. via ConfigMap oder Secret mit dem CA-Cert).
