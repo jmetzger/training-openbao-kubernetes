@@ -130,10 +130,6 @@ EOF
 ```
 
 ```
-# ich muss mir selbst diese policy als admin noch zuweisen,
-# cat /tmp/bao.json  <- hier steht auch das root-token 
-# das geht nur als root
-bao login
 # Welche policies habe ich aktuell 
 # default 
 bao token lookup
@@ -141,11 +137,6 @@ bao token lookup
 bao write auth/userpass/users/admin policies="default,ssh-group-readonly" 
 ```
 
-```
-# Jetzt wieder als normaler Benutzer anmelden
-# cat /tmp/bao.json # hier ist das passwort fürs Training 
-bao login -method=userpass username=admin
-```
 
 ---
 
