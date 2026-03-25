@@ -264,19 +264,14 @@ EOF
 * z.B. mountPath: kubernetes-tln2 statt korrekt mountPath: kubernetes-cluster-tln2
 ```
 
+<img width="1138" height="55" alt="image" src="https://github.com/user-attachments/assets/43f6c70c-2d02-416c-990d-61ca02660825" />
+
 ```
 # Weitere Auskünfte liefer kubectl describe
 # Es kommt ein permission denied, weil es ein Pfad ist, der nicht konfiguriert ist. (kubernetes-tln2 statt korrekt kubernetes-cluster-tln2)
 ```
 
 <img width="1891" height="223" alt="image" src="https://github.com/user-attachments/assets/0bda3a09-2344-47fc-bf0c-2fd96c5d6008" />
-
-
-
-
-<img width="1138" height="55" alt="image" src="https://github.com/user-attachments/assets/43f6c70c-2d02-416c-990d-61ca02660825" />
-
-
 
 > Falls OpenBao ein selbstsigniertes Zertifikat nutzt, muss `spec.provider.vault.caProvider` konfiguriert werden (z.B. via ConfigMap oder Secret mit dem CA-Cert).
 
