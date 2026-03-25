@@ -35,7 +35,7 @@ su -  tln$TN
 
 Jeder Teilnehmer speichert seinen SSH Public Key in OpenBao. Über **Servergruppen** wird definiert, welche Teilnehmer Zugriff auf welche Server bekommen. Beim Ausrollen eines neuen Servers werden automatisch alle Public Keys der Gruppenmitglieder deployed.
 
-**OpenBao-Server:** `https://openbao.jmetzger.do.t3isp.de:8200`
+**OpenBao-Server:** `https://openbao.jmetzger.do.t3isp.de`
 
 ### Datenmodell
 
@@ -52,7 +52,7 @@ secret/ssh-groups/dbservers      ← Gruppe: members = "tln1,tln2"
 ## Vorbereitung: Login
 
 ```bash
-export BAO_ADDR="https://openbao.jmetzger.do.t3isp.de:8200"
+export BAO_ADDR="https://openbao.jmetzger.do.t3isp.de"
 
 # passwort findest du hier für diesen user (für das training)
 # Ansonsten bitte nich speichern
