@@ -108,7 +108,7 @@ Damit der kube-apiserver einen brauchbaren Username aus dem ID Token lesen kann,
 
 ```bash
 # hier finden wir auch den accessor von userpass
-bau auth list
+bao auth list
 ```
 
 ```
