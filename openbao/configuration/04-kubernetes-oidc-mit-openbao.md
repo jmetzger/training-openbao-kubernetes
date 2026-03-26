@@ -107,11 +107,6 @@ bao write identity/oidc/key/key-tln$TN \
 Damit der kube-apiserver einen brauchbaren Username aus dem ID Token lesen kann, definieren wir einen Scope mit einem `username`-Claim:
 
 ```bash
-bao write identity/oidc/scope/user \
-  template='{"username":{{identity.entity.name}}}'
-```
-
-```bash
 # hier finden wir auch den accessor von userpass
 bau auth list
 ```
